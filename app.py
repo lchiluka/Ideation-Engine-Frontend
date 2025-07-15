@@ -1406,7 +1406,8 @@ with st.sidebar:
         else:
             if st.button("Export Concept Cards as PPTX"):
                 buf = BytesIO()
-                build_pptx_from_df(sel, buf)
+                workflow = st.session_state.get("selected_workflow", "default")
+                build_pptx_from_df(sel, buf, workflow=workflow)
                 buf.seek(0)
                 st.download_button("Download PPTX", buf,
                     "concept_cards_selected.pptx",
