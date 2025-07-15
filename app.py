@@ -1061,7 +1061,7 @@ def _flatten_solution(agent: str, sol: Dict[str, Any]) -> Dict[str, Any]:
 
 
 from typing import Dict, Any
-import logging
+
 import asyncio
 
 from utils.llm import call_llm_with_schema_sync
@@ -1069,8 +1069,8 @@ from utils.trl_assessor import assess_trl_async, load_trl_rubric
 from utils.evidence import gather_evidence, sanitize_snippet
 from schemas import AGENT_JSON_SCHEMAS
 from agents import AGENT_MODEL_MAP
-
-
+import logging
+logger = logging.getLogger("uvicorn.error")
 def enrich_concept_card(title: str, description: str) -> Dict[str, Any]:
     """
     Return a concept card enriched by Scientific Research Agent 2 and both initial & validated TRL assessments.
