@@ -4,9 +4,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 
-__all__ = ["build_pptx_from_df"]
-
-def build_pptx_from_df(df: pd.DataFrame, out_stream: BytesIO | str) -> None:
+def build_pptx_from_df(df: pd.DataFrame, out_stream: BytesIO | str, workflow: str = "default") -> None:
     prs = Presentation()
 
     def setup_cell(
@@ -18,24 +16,21 @@ def build_pptx_from_df(df: pd.DataFrame, out_stream: BytesIO | str) -> None:
         bold: bool = False,
         align=PP_ALIGN.LEFT
     ):
-        # 1) Kill padding
         cell.margin_top = cell.margin_bottom = cell.margin_left = cell.margin_right = Pt(0)
 
         tf = cell.text_frame
         tf.vertical_anchor = MSO_ANCHOR.TOP
-        tf.word_wrap      = True
+        tf.word_wrap = True
 
-        # 2) Write into the one and only text frame paragraph(s)
         tf.clear()
         tf.text = str(text).strip()
 
-        # 3) Loop through all paragraphs & runs to enforce uniform styling
         for para in tf.paragraphs:
             para.alignment = align
             for run in para.runs:
-                run.font.name  = font_name
-                run.font.size  = Pt(font_size)
-                run.font.bold  = bold
+                run.font.name = font_name
+                run.font.size = Pt(font_size)
+                run.font.bold = bold
 
     for _, row in df.iterrows():
         slide = prs.slides.add_slide(prs.slide_layouts[5])
@@ -49,17 +44,31 @@ def build_pptx_from_df(df: pd.DataFrame, out_stream: BytesIO | str) -> None:
                 r.font.size = Pt(28)
                 r.font.bold = True
 
-        # Fields
-        fields = [
-            ("Agent",                   row.get("agent", "")),
-            ("Description",             row.get("description", "")),
-            ("Novelty",                 row.get("novelty_reasoning", "")),
-            ("Feasibility",             row.get("feasibility_reasoning", "")),
-            ("Validated TRL",           row.get("validated_trl", "")),
-            ("Validated TRL reasoning", row.get("validated_trl_reasoning", "")),
-            ("Components",              row.get("components", "")),
-            ("References",              row.get("references", "")),
-        ]
+        # Fields (conditional by workflow)
+        if workflow == "Cross-Industry Ideation":
+            fields = [
+                ("Agent",                   row.get("agent", "")),
+                ("Description",             row.get("description", "")),
+                ("Industry",                row.get("novelty_reasoning", "")),  # renamed
+                ("Original Solution",       row.get("original_solution", "")),  # new
+                ("Adaptation Challenges",   row.get("adaptation_challenges", "")),  # new
+                ("Feasibility",             row.get("feasibility_reasoning", "")),
+                ("Validated TRL",           row.get("validated_trl", "")),
+                ("Validated TRL reasoning", row.get("validated_trl_reasoning", "")),
+                ("Components",              row.get("components", "")),
+                ("References",              row.get("references", "")),
+            ]
+        else:
+            fields = [
+                ("Agent",                   row.get("agent", "")),
+                ("Description",             row.get("description", "")),
+                ("Novelty",                 row.get("novelty_reasoning", "")),
+                ("Feasibility",             row.get("feasibility_reasoning", "")),
+                ("Validated TRL",           row.get("validated_trl", "")),
+                ("Validated TRL reasoning", row.get("validated_trl_reasoning", "")),
+                ("Components",              row.get("components", "")),
+                ("References",              row.get("references", "")),
+            ]
 
         # Table
         n_rows, n_cols = len(fields) + 1, 2
@@ -75,12 +84,12 @@ def build_pptx_from_df(df: pd.DataFrame, out_stream: BytesIO | str) -> None:
         setup_cell(tbl.cell(0, 0), "Field", font_size=10, bold=True,  align=PP_ALIGN.CENTER)
         setup_cell(tbl.cell(0, 1), "Value", font_size=10, bold=True,  align=PP_ALIGN.CENTER)
 
-        # Data
+        # Rows
         for i, (lbl, val) in enumerate(fields, start=1):
             setup_cell(tbl.cell(i, 0), lbl, font_size=10, bold=False, align=PP_ALIGN.LEFT)
             setup_cell(tbl.cell(i, 1), val, font_size=10, bold=False, align=PP_ALIGN.LEFT)
 
-    # Save
+    # Save presentation
     if hasattr(out_stream, "write"):
         prs.save(out_stream)
     else:
