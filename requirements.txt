@@ -1,0 +1,18 @@
+streamlit>=1.32.0          # Streamlit UI framework :contentReference[oaicite:0]{index=0}
+pandas>=1.5.0              # DataFrame operations :contentReference[oaicite:1]{index=1}
+deepdiff>=6.4.0            # Deep diffing JSON objects :contentReference[oaicite:2]{index=2}
+jsonschema>=4.16.0         # JSON Schema validation :contentReference[oaicite:3]{index=3}
+requests>=2.28.1           # HTTP calls (Azure OpenAI, SerpAPI) :contentReference[oaicite:4]{index=4}
+urllib3>=1.26.0            # Underlying HTTP & SSL support :contentReference[oaicite:5]{index=5}
+python-docx>=0.8.11        # DOCX generation (utils/docx_export.py) :contentReference[oaicite:6]{index=6}
+python-pptx>=0.6.21        # PPTX generation (utils/pptx_export.py) :contentReference[oaicite:7]{index=7}
+html2text>=2020.1.16       # HTML→Markdown conversion (ProposalEditor) :contentReference[oaicite:8]{index=8}
+mammoth>=1.5.0             # DOCX→HTML live preview (ProposalEditor) :contentReference[oaicite:9]{index=9}
+streamlit-quill==0.0.3     # Rich-text editor widget in Streamlit :contentReference[oaicite:10]{index=10}
+aiohttp>=3.8.0
+feedparser>=6.0.0
+openai>=1.0.0
+faiss-cpu>=1.7.4
+SQLAlchemy>=2.0.0
+python-dotenv>=0.21.0
+pypandoc
