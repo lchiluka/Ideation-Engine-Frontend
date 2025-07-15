@@ -898,10 +898,19 @@ async def ideate_review_refactor(
             with stream():
                 _bubble(ideator, "Refining their concepts…")
         _log("assistant", "Refining concepts…", ideator)
-        mine = [s for s in raw if s["agent"] == ideator]
+        mine = [s for s in raw if s.get("agent") == ideator]
         if not mine:
             return []
-        fb_for = [{"title": s["title"], "comments": feedback[s["title"]]} for s in mine]
+        # build title→comments list, skipping any entry without a valid title
+        fb_for: list[dict] = []
+        for sol in mine:
+            t = sol.get("title") or sol.get("Title")
+            if not t:
+                continue
+            fb_for.append({
+                "title":   t,
+                "comments": feedback.get(t, [])
+            })
         role_p = (
             "You previously proposed these concepts. "
             "Improve or replace each one in light of the comments."
