@@ -80,17 +80,48 @@ def get_similar_concepts(problem: str, top_k: int = 50) -> list[dict]:
         return []
 
 def save_concepts(problem: str, concepts: list[dict]) -> tuple[bool,int,str]:
-    payload = [{**c, "problem_statement": problem} for c in concepts]
+    import streamlit as st
+    import requests
+
+    # 1) figure out which workflow the user chose
+    workflow = st.session_state.selected_workflow  # e.g. "Cross-Industry Ideation"
+
+    # 2) build the JSON payload with snake_case keys matching your Pydantic model
+    payload: list[dict] = []
+    for row in concepts:
+        base = {
+            "agent":            row.get("agent"),
+            "title":            row.get("title"),
+            "description":      row.get("description"),
+            "problem_statement": problem,
+        }
+
+        if workflow == "Cross-Industry Ideation":
+            # map display cols → backend fields
+            base["industry"]               = row.get("Industry")
+            base["original_solution"]      = row.get("Original Solution")
+            base["adaptation_challenges"]  = row.get("Adaptation Challenges")
+        else:
+            # traditional fields
+            base["novelty_reasoning"]      = row.get("novelty_reasoning")
+            base["feasibility_reasoning"]  = row.get("feasibility_reasoning")
+            base["cost_estimate"]          = row.get("cost_estimate")
+
+        payload.append(base)
+
+    # 3) include the workflow as a query‐param
+    wf_param = "cross-industry" if workflow == "Cross-Industry Ideation" else "traditional"
+    url = f"{API_BASE_URL}/concepts?workflow={wf_param}"
+
     try:
-        r = requests.post(f"{API_BASE_URL}/concepts", json=payload)
-        # don’t raise_for_status yet—capture everything
+        r = requests.post(url, json=payload)
         status = r.status_code
-        body = r.text
-        success = (200 <= status < 300)
-        logging.info("POST /concepts → %s\n%s", status, body)
+        body   = r.text
+        success = 200 <= status < 300
+        st.logging.info("POST /concepts → %s\n%s", status, body)
         return success, status, body
     except Exception as e:
-        logging.error("Exception posting concepts: %s", e, exc_info=True)
+        st.logging.error("Exception posting concepts: %s", e, exc_info=True)
         return False, None, str(e)
 
 # ---------------------------------------------------------------------------
@@ -829,7 +860,14 @@ async def ideate_review_refactor(
             sol["title"] = sol.pop("Title")
 
     # ── PHASE-2: gather reviewer feedback ──────────────────────────────
-    feedback: dict[str, list[str]] = {s["title"]: [] for s in raw}
+    feedback: dict[str, list[str]] = {}
+    for sol in raw:
+        # try both lowercase and uppercase keys
+        title = sol.get("title") or sol.get("Title")
+        if not title:
+            # skip any entries without a usable title
+            continue
+        feedback[title] = []
 
     async def _review(reviewer: str) -> None:
         if stream:
