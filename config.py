@@ -1,4 +1,4 @@
-# ---------------------------------------------------------------------------
+y# ---------------------------------------------------------------------------
 # config.py  –  central constants & environment‑specific settings
 # ---------------------------------------------------------------------------
 """All non‑secret, project‑wide constants live here.
@@ -15,7 +15,7 @@ import os
 # 🔐  Endpoints & API keys (read from env)  =================================
 # ===========================================================================
 
-def _get(k: str, default=None):
+def _get(key: str, default=None):
     # first try st.secrets (deployed), then fall back to env‐vars (local .env)
     return os.getenv(key, default)
 
