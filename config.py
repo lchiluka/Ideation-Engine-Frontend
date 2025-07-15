@@ -15,12 +15,9 @@ import os
 # 🔐  Endpoints & API keys (read from env)  =================================
 # ===========================================================================
 
-import os
-import streamlit as st
-
 def _get(k: str, default=None):
     # first try st.secrets (deployed), then fall back to env‐vars (local .env)
-    return st.secrets.get(k, os.getenv(k, default))
+    return os.getenv(key, default)
 
 API_BASE_URL           = _get("API_BASE_URL")
 AZURE_ENDPOINT         = _get("AZURE_ENDPOINT")
