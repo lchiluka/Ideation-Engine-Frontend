@@ -27,7 +27,7 @@ from schemas import AGENT_JSON_SCHEMAS
 from agents import AGENT_MODEL_MAP
 from utils.llm import call_llm_with_schema_async
 from ai_searchcall import call_product_ideation_with_search
-
+import logging
 st.set_page_config(
     page_title="Agentic Ideation Studio", layout="wide"
 )  # ←  Full-width canvas
@@ -79,49 +79,53 @@ def get_similar_concepts(problem: str, top_k: int = 50) -> list[dict]:
         logging.error(f"Error fetching similar concepts: {e}", exc_info=True)
         return []
 
+
+logger = logging.getLogger(__name__)
+
 def save_concepts(problem: str, concepts: list[dict]) -> tuple[bool,int,str]:
-    import streamlit as st
-    import requests
-
-    # 1) figure out which workflow the user chose
-    workflow = st.session_state.selected_workflow  # e.g. "Cross-Industry Ideation"
-
-    # 2) build the JSON payload with snake_case keys matching your Pydantic model
-    payload: list[dict] = []
+    workflow = st.session_state.selected_workflow
+    payload = []
     for row in concepts:
         base = {
-            "agent":            row.get("agent"),
-            "title":            row.get("title"),
-            "description":      row.get("description"),
+            "agent": row.get("agent"),
+            "title": row.get("title"),
+            "description": row.get("description"),
             "problem_statement": problem,
         }
-
         if workflow == "Cross-Industry Ideation":
-            # map display cols → backend fields
-            base["industry"]               = row.get("Industry")
-            base["original_solution"]      = row.get("Original Solution")
-            base["adaptation_challenges"]  = row.get("Adaptation Challenges")
+            base["industry"]              = row.get("Industry")
+            base["original_solution"]     = row.get("Original Solution")
+            base["adaptation_challenges"] = row.get("Adaptation Challenges")
         else:
-            # traditional fields
-            base["novelty_reasoning"]      = row.get("novelty_reasoning")
-            base["feasibility_reasoning"]  = row.get("feasibility_reasoning")
-            base["cost_estimate"]          = row.get("cost_estimate")
-
+            base["novelty_reasoning"]     = row.get("novelty_reasoning")
+            base["feasibility_reasoning"] = row.get("feasibility_reasoning")
+            base["cost_estimate"]         = row.get("cost_estimate")
         payload.append(base)
 
-    # 3) include the workflow as a query‐param
     wf_param = "cross-industry" if workflow == "Cross-Industry Ideation" else "traditional"
     url = f"{API_BASE_URL}/concepts?workflow={wf_param}"
 
     try:
         r = requests.post(url, json=payload)
-        status = r.status_code
-        body   = r.text
-        success = 200 <= status < 300
-        logger.info("POST /concepts → %s\n%s", status, body)
-        return success, status, body
+        body = r.text
+        if not r.ok:
+            # show full validation error and what we sent
+            st.error(f"❌ Save failed (status={r.status_code})")
+            try:
+                # if JSON, pretty-print the list of errors
+                st.json(r.json())
+            except:
+                st.write(body)
+            st.warning("Payload was:")
+            st.json(payload)
+            return False, r.status_code, body
+
+        logger.info("POST /concepts → %s\n%s", r.status_code, body)
+        return True, r.status_code, body
+
     except Exception as e:
         logger.error("Exception posting concepts: %s", e, exc_info=True)
+        st.error(f"❌ Exception posting concepts: {e}")
         return False, None, str(e)
 
 # ---------------------------------------------------------------------------
