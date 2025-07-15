@@ -15,13 +15,24 @@ import os
 # 🔐  Endpoints & API keys (read from env)  =================================
 # ===========================================================================
 
-AZURE_ENDPOINT = "https://harsh-m6qoycs6-eastus2.cognitiveservices.azure.com"
-AZURE_OPENAI_KEY = "DjlhGHwAzeElpQGkUTYRSlZ1s7R3mlxyviIUQODK8kGcxzmrmiryJQQJ99BBACHYHv6XJ3w3AAAAACOGIyMt"
-SERP_API_KEY     = "82b297d44d1eb327484841f4494b73221eecee8ac1916c42a2ebcffe2243f45b"
-# Endpoint & key for the product-datasheet deployment (GPT‑4o)
-PRODUCTS_ENDPOINT = "https://ccm-product-agent.openai.azure.com"
-PRODUCTS_OPENAI_KEY = "2Gq04Cva1b41axfHcPMCWPaws9OJw3zk3iHRcrrZ9IFsQFVKvSegJQQJ99BDACYeBjFXJ3w3AAABACOG9c66"
+def _get(key: str, default=None):
+    # first try st.secrets (deployed), then fall back to env‐vars (local .env)
+    return os.getenv(key, default)
+
+API_BASE_URL           = _get("API_BASE_URL")
+AZURE_ENDPOINT         = _get("AZURE_ENDPOINT")
+AZURE_OPENAI_KEY       = _get("AZURE_OPENAI_KEY")
+OPENAI_API_KEY         = _get("OPENAI_API_KEY")
+OPENAI_ENDPOINT        = _get("OPENAI_ENDPOINT")
+PRODUCTS_ENDPOINT      = _get("PRODUCTS_ENDPOINT")
+PRODUCTS_OPENAI_KEY    = _get("PRODUCTS_OPENAI_KEY")
+SEARCH_ENDPOINT        = _get("SEARCH_ENDPOINT")
+SEARCH_INDEX           = _get("SEARCH_INDEX")
+SEARCH_KEY             = _get("SEARCH_KEY")
+SERP_API_KEY           = _get("SERP_API_KEY")
 # Fail fast if critical secrets are missing when imported by the main app.
+
+
 if not AZURE_ENDPOINT or not AZURE_OPENAI_KEY:
     import warnings
     warnings.warn(

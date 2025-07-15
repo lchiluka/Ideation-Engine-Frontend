@@ -46,7 +46,7 @@ st.session_state.setdefault("df_ppt", None)    # ← new
 # ─────────────────────────────────────────────────────────────────────────────
 # API config for FastAPI/Postgres back end
 # ─────────────────────────────────────────────────────────────────────────────
-API_BASE_URL =  "http://127.0.0.1:8001"
+API_BASE_URL =  "https://carlisle-ideation-engine-backend.azurewebsites.net"
 
 def get_concepts_for(problem: str) -> list[dict]:
     try:
@@ -1406,7 +1406,8 @@ with st.sidebar:
         else:
             if st.button("Export Concept Cards as PPTX"):
                 buf = BytesIO()
-                build_pptx_from_df(sel, buf)
+                workflow = st.session_state.get("selected_workflow", "default")
+                build_pptx_from_df(sel, buf, workflow=workflow)
                 buf.seek(0)
                 st.download_button("Download PPTX", buf,
                     "concept_cards_selected.pptx",
