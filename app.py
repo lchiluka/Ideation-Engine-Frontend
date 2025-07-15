@@ -46,7 +46,7 @@ st.session_state.setdefault("df_ppt", None)    # ← new
 # ─────────────────────────────────────────────────────────────────────────────
 # API config for FastAPI/Postgres back end
 # ─────────────────────────────────────────────────────────────────────────────
-API_BASE_URL =  "http://127.0.0.1:8001"
+API_BASE_URL =  "https://carlisle-ideation-engine-backend.azurewebsites.net"
 
 def get_concepts_for(problem: str) -> list[dict]:
     try:
