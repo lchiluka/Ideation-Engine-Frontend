@@ -118,10 +118,10 @@ def save_concepts(problem: str, concepts: list[dict]) -> tuple[bool,int,str]:
         status = r.status_code
         body   = r.text
         success = 200 <= status < 300
-        st.logging.info("POST /concepts → %s\n%s", status, body)
+        logger.info("POST /concepts → %s\n%s", status, body)
         return success, status, body
     except Exception as e:
-        st.logging.error("Exception posting concepts: %s", e, exc_info=True)
+        logger.error("Exception posting concepts: %s", e, exc_info=True)
         return False, None, str(e)
 
 # ---------------------------------------------------------------------------
