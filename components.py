@@ -13,11 +13,25 @@ from schemas import AGENT_JSON_SCHEMAS
 DetectorFactory.seed = 0
 
 # ─── Configuration ─────────────────────────────────────────────────────────
-SEARCH_ENDPOINT    = "https://ccm-products-rag.search.windows.net" 
-SEARCH_INDEX       = "carlisle-product-datasheets"
-SEARCH_KEY         = "9JMdjvcHEjPGa3mr4KIwGYdx9j9EiRVrIPRkjvh9VzAzSeDS5pQO"
-OPENAI_ENDPOINT    = "https://ccm-product-agent.openai.azure.com"
-OPENAI_API_KEY     = "2Gq04Cva1b41axfHcPMCWPaws9OJw3zk3iHRcrrZ9IFsQFVKvSegJQQJ99BDACYeBjFXJ3w3AAABACOG9c66"
+import os
+import streamlit as st
+
+def _get(k: str, default=None):
+    # first try st.secrets (deployed), then fall back to env‐vars (local .env)
+    return st.secrets.get(k, os.getenv(k, default))
+
+API_BASE_URL           = _get("API_BASE_URL")
+AZURE_ENDPOINT         = _get("AZURE_ENDPOINT")
+AZURE_OPENAI_KEY       = _get("AZURE_OPENAI_KEY")
+OPENAI_API_KEY         = _get("OPENAI_API_KEY")
+OPENAI_ENDPOINT        = _get("OPENAI_ENDPOINT")
+PRODUCTS_ENDPOINT      = _get("PRODUCTS_ENDPOINT")
+PRODUCTS_OPENAI_KEY    = _get("PRODUCTS_OPENAI_KEY")
+SEARCH_ENDPOINT        = _get("SEARCH_ENDPOINT")
+SEARCH_INDEX           = _get("SEARCH_INDEX")
+SEARCH_KEY             = _get("SEARCH_KEY")
+SERP_API_KEY           = _get("SERP_API_KEY")
+# Fail fast if critical secrets are missing when imported by the main app.
 PRIMARY_MODEL = "gpt-4.1" 
 FALLBACK_MODEL  = "gpt-4o"
 API_VER     = "2025-01-01-preview"
