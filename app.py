@@ -60,11 +60,6 @@ st.markdown(f"""
       z-index: 1000 !important;
     }}
 
-    /* Completely hide the collapse/expand control */
-    button[data-testid="collapsedControl"] {{
-      display: none !important;
-    }}
-
     /* Your other CSS: background stripes, DataFrame header tint, button styling… */
     body, [data-testid="stAppViewContainer"] {{
       background-color: #F2F2F2 !important;
@@ -107,6 +102,36 @@ st.markdown(f"""
   </div>
 """, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+  /* 1) Make sure the collapse/expand rockstar is clickable */
+  button[data-testid="collapsedControl"],
+  div[data-testid="stSidebarCollapsedControl"] {
+    display: block !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    top: var(--banner-height) !important;
+    left: 0.5rem !important;
+    z-index: 2001 !important;
+    background: none !important;
+    border: none !important;
+    padding: 0.25rem 0.5rem !important;
+    cursor: pointer;
+  }
+
+  /* 2) Swap in a simple hamburger for the “expand” button */
+  button[data-testid="collapsedControl"]::before {
+    content: "☰";
+    font-size: 1.5rem;
+    color: white;
+  }
+
+  /* 3) When it’s collapsed, recolor the little chevron */
+  div[data-testid="stSidebarCollapsedControl"] svg {
+    fill: white !important;
+  }
+</style>
+""", unsafe_allow_html=True)
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
