@@ -146,7 +146,37 @@ st.markdown("""
   }
 </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+  :root { --banner-height: 100px; }
 
+  /* When collapsed, make the sidebar container itself stay put (instead of vanishing) */
+  section[data-testid="stSidebar"][aria-expanded="false"] {
+    position: fixed !important;
+    top: var(--banner-height) !important;
+    left: 0 !important;
+    width: 3.5rem !important;           /* enough to show your toggle */
+    height: calc(100% - var(--banner-height)) !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
+  }
+
+  /* And force‐show the expand chevron inside it */
+  [data-testid="stSidebarCollapsedControl"] {
+    display: block !important;
+    position: absolute !important;
+    top: 0.25rem !important;
+    left: 0.25rem !important;
+    cursor: pointer !important;
+    z-index: 1001 !important;
+  }
+  [data-testid="stSidebarCollapsedControl"] svg {
+    fill: white !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+</style>
+""", unsafe_allow_html=True)
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
 from io import BytesIO
