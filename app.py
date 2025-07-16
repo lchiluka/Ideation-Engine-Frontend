@@ -105,63 +105,63 @@ st.markdown(f"""
 st.markdown("""
 <style>
   :root {
-    --header-height:       100px;
-    --sidebar-expanded:    16rem;  /* adjust to taste */
-    --sidebar-collapsed:    3rem;  /* gutter width when collapsed */
+    --banner-h: 100px;
+    --sidebar-w: 16rem;        /* full width */
+    --sidebar-w-c: 3rem;       /* collapsed gutter */
   }
 
-  /* 1) Remove the built-in slide-out transform and margin */
+  /* 1) Kill Streamlit’s built-in slide-out transform & margin */
   section[data-testid="stSidebar"] {
     transform: none !important;
-    margin-left:  0    !important;
-    transition: width .2s ease !important;
+    margin-left: 0      !important;
+    transition: none    !important;
   }
 
   /* 2) Expanded sidebar */
   section[data-testid="stSidebar"][aria-expanded="true"] {
-    position: fixed     !important;
-    top:      var(--header-height) !important;
-    left:     0          !important;
-    width:    var(--sidebar-expanded) !important;
-    height:   calc(100% - var(--header-height)) !important;
-    overflow: visible    !important;
-    z-index:  1000       !important;
+    position: fixed         !important;
+    top:      var(--banner-h) !important;
+    left:     0               !important;
+    width:    var(--sidebar-w) !important;
+    height:   calc(100% - var(--banner-h)) !important;
+    overflow: visible        !important;
+    z-index:  1000           !important;
   }
 
-  /* 3) Collapsed sidebar (gutter) */
+  /* 3) Collapsed sidebar → small gutter instead of vanishing */
   section[data-testid="stSidebar"][aria-expanded="false"] {
-    position: fixed     !important;
-    top:      var(--header-height) !important;
-    left:     0          !important;
-    width:    var(--sidebar-collapsed) !important;
-    height:   calc(100% - var(--header-height)) !important;
-    overflow: visible    !important;
-    z-index:  1000       !important;
+    position: fixed         !important;
+    top:      var(--banner-h) !important;
+    left:     0               !important;
+    width:    var(--sidebar-w-c) !important;
+    height:   calc(100% - var(--banner-h)) !important;
+    overflow: visible        !important;
+    z-index:  1000           !important;
   }
 
-  /* 4) Shift the main content over to match sidebar width */
-  /*    When expanded… */
+  /* 4) Shift the main app area over to match */
   div[data-testid="stAppViewContainer"] {
-    margin-left: var(--sidebar-expanded) !important;
+    margin-left: var(--sidebar-w) !important;
     transition: margin-left .2s ease !important;
   }
-  /*    …When collapsed */
   section[data-testid="stSidebar"][aria-expanded="false"]
     ~ div[data-testid="stAppViewContainer"] {
-    margin-left: var(--sidebar-collapsed) !important;
+    margin-left: var(--sidebar-w-c) !important;
   }
 
-  /* 5) Always show the collapse/expand toggle and keep it clickable */
+  /* 5) Always show the collapse/expand button and keep it clickable */
   button[aria-label="Collapse sidebar"],
   button[aria-label="Expand sidebar"] {
-    display: block       !important;
-    position: fixed      !important;
-    top:      calc(var(--header-height) + 0.5rem) !important;
-    left:     0.5rem     !important;
-    z-index: 2000        !important;
-    background: none     !important;
-    border: none         !important;
-    cursor: pointer      !important;
+    opacity: 1         !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+    background: none   !important;
+    border: none       !important;
+    z-index: 2000      !important;
+    position: fixed    !important;
+    top:      calc(var(--banner-h) + 0.5rem) !important;
+    left:     0.5rem   !important;
+    cursor:   pointer  !important;
   }
 </style>
 """, unsafe_allow_html=True)
