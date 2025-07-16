@@ -15,26 +15,24 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 1) Read & Base64-encode your logo (unchanged)
+# right after st.set_page_config(...)
 _logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
 _logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
 _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 
 st.markdown(f"""
   <style>
-    :root {{ 
+    :root {{
       --banner-h: 100px;
-      --sidebar-w: 16rem;      /* width when expanded */
-      --sidebar-w-c: 3rem;     /* width when collapsed */
+      --sidebar-w: 16rem;
+      --sidebar-w-c: 3rem;
     }}
 
     /* 1) Hide Streamlit’s default header & toolbar */
     [data-testid="stToolbar"],
     [data-testid="stHeader"] {{
       display: none !important;
-      height: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
+      margin: 0; padding: 0; height: 0;
     }}
 
     /* 2) Your custom banner */
@@ -43,29 +41,25 @@ st.markdown(f"""
       top: 0; left: 0; right: 0;
       height: var(--banner-h) !important;
       background-color: #003366;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      z-index: 2000 !important;
+      display: flex; align-items: center;
+      padding: 0 24px; z-index: 2000;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }}
     .main .block-container {{
       padding-top: var(--banner-h) !important;
     }}
 
-    /* 3) Kill Streamlit’s built-in slide-out transform & margin */
+    /* 3) Pin the sidebar at a fixed width */
     [data-testid="stSidebar"] {{
-      transform: none !important;
-      margin-left: 0 !important;
-      transition: none !important;
       position: fixed !important;
       top: var(--banner-h) !important;
       height: calc(100% - var(--banner-h)) !important;
+      transform: none !important;
+      margin-left: 0 !important;
+      transition: none !important;
       overflow: visible !important;
-      z-index: 1000 !important;
+      z-index: 1000;
     }}
-
-    /* 4) Expanded vs. collapsed widths */
     [data-testid="stSidebar"][aria-expanded="true"] {{
       width: var(--sidebar-w) !important;
     }}
@@ -73,7 +67,7 @@ st.markdown(f"""
       width: var(--sidebar-w-c) !important;
     }}
 
-    /* 5) Slide the app content over in sync */
+    /* 4) Shift the app content over in sync */
     [data-testid="stAppViewContainer"] {{
       margin-left: var(--sidebar-w) !important;
       transition: margin-left .2s ease !important;
@@ -83,29 +77,33 @@ st.markdown(f"""
       margin-left: var(--sidebar-w-c) !important;
     }}
 
-    /* 6) Always show & pin the collapse/expand button */
+    /* 5) Keep the collapse/expand button visible & clickable */
     button[aria-label="Collapse sidebar"],
     button[aria-label="Expand sidebar"] {{
-      opacity: 1          !important;
+      position: fixed !important;
+      top: calc(var(--banner-h) + 0.5rem) !important;
+      left: 0.5rem !important;
+      z-index: 2000 !important;
+      opacity: 1 !important;
       visibility: visible !important;
       pointer-events: all !important;
-      background: none    !important;
-      border: none        !important;
-      position: fixed     !important;
-      top: calc(var(--banner-h) + 0.5rem) !important;
-      left: 0.5rem        !important;
-      z-index: 2000       !important;
-      cursor: pointer     !important;
+      background: none !important;
+      border: none !important;
+      cursor: pointer !important;
     }}
   </style>
 
   <div class="banner">
     <img src="{_logo_uri}" height="50" style="margin-right:1rem;">
-    <h1 style="flex:1; color:white; margin:0; font-size:2rem; text-align:center;">
+    <h1 style="
+      flex:1; color:white; margin:0;
+      font-size:2rem; text-align:center;
+    ">
       Agentic Ideation Studio
     </h1>
   </div>
 """, unsafe_allow_html=True)
+
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
