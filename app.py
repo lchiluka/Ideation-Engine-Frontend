@@ -104,126 +104,56 @@ st.markdown(f"""
 
 st.markdown("""
 <style>
-  :root { --banner-height: 100px; }
-
-  /* 1) Let the sidebar and its header overflow so the button isn't clipped */
-  [data-testid="stSidebar"],
-  [data-testid="stSidebarHeader"] {
-    overflow: visible !important;
-    position: relative !important;
-    z-index: 2000 !important;
-  }
-
-  /* 2) Force‐show both the collapse and the expand controls, wherever Streamlit put them */
-  button[aria-label="Collapse sidebar"],
-  button[aria-label="Expand sidebar"],
-  [data-testid="collapsedControl"],
-  [data-testid="stSidebarCollapsedControl"] {
-    display: block !important;
-    pointer-events: auto !important;
-    position: absolute !important;
-    top: var(--banner-height) !important;
-    left: 0.5rem !important;
-    z-index: 2001 !important;
-    background: none !important;
-    border: none !important;
-    padding: 0.25rem 0.5rem !important;
-    cursor: pointer;
-  }
-
-  /* 3) Swap in a white ☰ for the Collapse action */
-  button[aria-label="Collapse sidebar"]::before,
-  [data-testid="collapsedControl"]::before {
-    content: "☰" !important;
-    font-size: 1.5rem !important;
-    color: white !important;
-  }
-
-  /* 4) When it’s collapsed, keep the little chevron white */
-  button[aria-label="Expand sidebar"] svg,
-  [data-testid="stSidebarCollapsedControl"] svg {
-    fill: white !important;
-  }
-</style>
-""", unsafe_allow_html=True)
-st.markdown("""
-<style>
-  :root { --banner-height: 100px; }
-
-  /* When collapsed, make the sidebar container itself stay put (instead of vanishing) */
-  section[data-testid="stSidebar"][aria-expanded="false"] {
-    position: fixed !important;
-    top: var(--banner-height) !important;
-    left: 0 !important;
-    width: 3.5rem !important;           /* enough to show your toggle */
-    height: calc(100% - var(--banner-height)) !important;
-    overflow: visible !important;
-    z-index: 1000 !important;
-  }
-
-  /* And force‐show the expand chevron inside it */
-  [data-testid="stSidebarCollapsedControl"] {
-    display: block !important;
-    position: absolute !important;
-    top: 0.25rem !important;
-    left: 0.25rem !important;
-    cursor: pointer !important;
-    z-index: 1001 !important;
-  }
-  [data-testid="stSidebarCollapsedControl"] svg {
-    fill: white !important;
-    width: 1.5rem !important;
-    height: 1.5rem !important;
-  }
-</style>
-""", unsafe_allow_html=True)
-st.markdown("""
-<style>
   :root {
-    /* tweak these to taste */
-    --sidebar-expanded-width: 18rem;
-    --sidebar-collapsed-width: 3.5rem;
     --banner-height: 100px;
+    --sidebar-width: 16rem;           /* width when expanded */
+    --sidebar-collapsed-width: 3rem;   /* width when collapsed */
   }
 
-  /* 1) Always cancel Streamlit’s translateX on the sidebar container */
+  /* 1) Kill the built-in slide-out transform/margin */
   section[data-testid="stSidebar"] {
     transform: none !important;
+    margin-left: 0    !important;
+    transition: none  !important;
   }
 
-  /* 2) Expanded state: fixed width under your banner */
+  /* 2) Expanded state: fixed width, flush under your banner */
   section[data-testid="stSidebar"][aria-expanded="true"] {
-    position: fixed !important;
-    top: var(--banner-height) !important;
-    left: 0 !important;
-    width: var(--sidebar-expanded-width) !important;
-    height: calc(100% - var(--banner-height)) !important;
-    overflow: visible !important;
-    z-index: 1000 !important;
+    position: fixed     !important;
+    top:      var(--banner-height) !important;
+    left:     0          !important;
+    width:    var(--sidebar-width) !important;
+    height:   calc(100% - var(--banner-height)) !important;
+    overflow: visible    !important;
+    z-index:  1000       !important;
   }
 
-  /* 3) Collapsed state: small gutter so the toggle never disappears */
+  /* 3) Collapsed state: shrink to a small gutter instead of hiding */
   section[data-testid="stSidebar"][aria-expanded="false"] {
-    position: fixed !important;
-    top: var(--banner-height) !important;
-    left: 0 !important;
-    width: var(--sidebar-collapsed-width) !important;
-    height: calc(100% - var(--banner-height)) !important;
-    overflow: visible !important;
-    z-index: 1000 !important;
+    position: fixed     !important;
+    top:      var(--banner-height) !important;
+    left:     0          !important;
+    width:    var(--sidebar-collapsed-width) !important;
+    height:   calc(100% - var(--banner-height)) !important;
+    overflow: visible    !important;
+    z-index:  1000       !important;
   }
 
-  /* 4) Make sure stSidebarContent is still clickable when collapsed */
+  /* 4) Always show the expand-chevron and keep it clickable */
+  button[aria-label="Expand sidebar"],
   [data-testid="stSidebarCollapsedControl"] {
-    display: block !important;
-    position: absolute !important;
-    top: 0.25rem !important;
-    left: 0.25rem !important;
-    z-index: 1001 !important;
-    cursor: pointer !important;
+    display: block       !important;
+    position: fixed      !important;
+    top:      calc(var(--banner-height) + 0.25rem) !important;
+    left:     0.25rem    !important;
+    z-index:  2000       !important;
+    cursor:   pointer    !important;
   }
+  button[aria-label="Expand sidebar"] svg,
   [data-testid="stSidebarCollapsedControl"] svg {
-    fill: white !important;
+    fill: white          !important;
+    width: 1.5rem        !important;
+    height:1.5rem        !important;
   }
 </style>
 """, unsafe_allow_html=True)
