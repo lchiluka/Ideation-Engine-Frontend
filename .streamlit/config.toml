@@ -1,0 +1,17 @@
+# .streamlit/config.toml
+
+[server]
+headless = true
+enableCORS = false           # allow inline CSS/HTML
+enableXsrfProtection = false # allow markdown-CSS injection
+port = $PORT                 # Azure provides $PORT
+
+[global]
+favicon = "images/favicon.ico"
+
+[theme]
+primaryColor = "#003366"
+backgroundColor = "#F2F2F2"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#000000"
+font = "sans serif"

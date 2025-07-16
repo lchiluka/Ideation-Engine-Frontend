@@ -28,10 +28,296 @@ from agents import AGENT_MODEL_MAP
 from utils.llm import call_llm_with_schema_async
 from ai_searchcall import call_product_ideation_with_search
 import logging
-st.set_page_config(
-    page_title="Agentic Ideation Studio", layout="wide"
-)  # ←  Full-width canvas
+import streamlit as st
+from pathlib import Path
+import base64
 
+# now you can call set_page_config and the rest of your layout
+st.set_page_config(
+    page_title="Agentic Ideation Studio – Carlisle",
+    layout="wide",
+    initial_sidebar_state="expanded", 
+)
+
+st.markdown(
+    """
+    <style>
+      /* hide the top toolbar entirely */
+      [data-testid="stToolbar"] {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* also collapse the header tag in case they change markup */
+      [data-testid="stHeader"] {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# right after st.set_page_config(...)
+st.markdown(
+    """
+    <style>
+      /* 1) Make the page background the Carlisle light‐grey */
+      body, [data-testid="stAppViewContainer"] {
+        background-color: #F2F2F2;
+      }
+
+      /* 2) Add a very subtle diagonal stripe overlay in navy */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image:
+          repeating-linear-gradient(
+            135deg,
+            rgba(0, 75, 135, 0.05) 0px,
+            rgba(0, 75, 135, 0.05) 1px,
+            transparent 1px,
+            transparent 20px
+          );
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      /* 3) Tweak the sidebar to match the blue band */
+      .css-1d391kg nav[aria-label="Page navigation"] {
+        background-color: #003366 !important;
+      }
+      .css-1d391kg .sidebar-content {
+        background-color: #003366 !important;
+      }
+      /* ensure text in sidebar stays white */
+      .css-1d391kg .sidebar-content * {
+        color: white !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+# 1) Read & Base64-encode your logo
+_logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
+_logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
+
+
+# 1) Build your logo URL
+_logo_url = f"data:image/jpeg;base64,{_logo_data}"
+st.markdown(
+    f"""
+    <div style="
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background-color: #003366;
+      display: flex;
+      justify-content: center;      /* center the title */
+      align-items: center;
+      padding: 12px 24px;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      position: relative;           /* for absolute pos of logo */
+    ">
+      <!-- logo pinned to the absolute left -->
+    <img
+    src="{_logo_url}"
+    alt="Carlisle Logo"
+    height="50"
+    width="500"
+    style="
+        position: absolute;
+        top: 50%;
+        left: 24px;
+        transform: translateY(-50%);
+        max-height: 50px !important;
+        max-width: 500px !important;
+      " alt="Carlisle Logo">
+      <!-- title flexes and remains centered -->
+      <h1 style="
+        flex: 1;
+        margin: 0;
+        color: white;
+        font-size: 2.5rem;
+        text-align: center;
+        font-family: sans-serif;
+      ">
+        Agentic Ideation Studio 
+      </h1>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+# Push the rest of the app down so it isn’t hidden
+st.markdown(
+    """
+    <style>
+      [data-testid="stAppViewContainer"] .main .block-container {
+        padding-top: 100px !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
+    <style>
+      /* match your banner height */
+      :root { --banner-height: 100px; }
+
+      /* 1) Show the collapse-sidebar button on top of everything */
+      button[data-testid="collapsedControl"] {
+        position: fixed !important;
+        top: var(--banner-height) !important;
+        left: 0.5rem !important;      /* nudges it in from the left edge */
+        z-index: 9999 !important;     /* above header, sidebar, and app */
+        opacity: 1 !important;        /* ensure it isn’t hidden */
+      }
+
+      /* 2) Keep the sidebar under the banner but allow overflow */
+      [data-testid="stSidebar"] {
+        position: fixed !important;
+        top: var(--banner-height) !important;
+        height: calc(100% - var(--banner-height)) !important;
+        overflow: visible !important;  /* ← key bit to stop clipping */
+        z-index: 1000 !important;
+      }
+
+      /* 3) Its inner scroll area stays the same */
+      [data-testid="stSidebar"] > div:first-child {
+        height: calc(100% - var(--banner-height)) !important;
+        overflow-y: auto !important;
+      }
+
+      /* 4) Also prevent the main app container from clipping */
+      [data-testid="stAppViewContainer"] {
+        overflow: visible !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
+    <style>
+      /* 1) Force the collapse button to stay exactly where we placed it */
+      button[data-testid="collapsedControl"] {
+        transform: translateX(0) !important;
+      }
+
+      /* 2) Also clear any transform on the sidebar when it’s collapsed */
+      [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: none !important;
+      }
+
+      /* 3) Make sure no parent container is clipping us */
+      [data-testid="stSidebar"],
+      [data-testid="stAppViewContainer"],
+      [data-testid="stAppContainer"] {
+        overflow: visible !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
+    <style>
+    /* 1) Ensure no parent container ever clips overflow */
+    [data-testid="stSidebar"],
+    [data-testid="stAppViewContainer"],
+    [data-testid="stAppContainer"] {
+        overflow: visible !important;
+    }
+
+    /* 2) Fully slide the collapsed sidebar off-screen */
+    [data-testid="stSidebar"][aria-expanded="false"] {
+        transform: translateX(-100%) !important;
+    }
+
+    /* 3) Pin the collapse/expand button outside the sidebar */
+    button[data-testid="collapsedControl"] {
+        position: fixed !important;
+        top: var(--banner-height, 100px) !important;  /* just under your header */
+        left: 0.5rem !important;                       /* just inside the viewport */
+        z-index: 3000 !important;                      /* above everything else */
+        transform: none !important;                    /* cancel any inherited transform */
+        pointer-events: auto !important;               /* make absolutely sure it’s clickable */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown(
+    """
+    <style>
+    button[data-testid="collapsedControl"] {
+    position: fixed !important;
+    top: var(--banner-height, 100px) !important;   /* sit just under your header */
+    left: 0.5rem !important;                       /* nudge in from the left */
+    z-index: 3001 !important;                      /* above sidebar & banner */
+    transform: none !important;                    /* cancel any slide-out */
+    opacity: 1 !important;                         /* ensure it’s visible */
+    pointer-events: auto !important;               /* ensure it’s clickable */
+    }
+
+    /* force the little “chevron” back into view when collapsed */
+    div[data-testid="stSidebarCollapsedControl"] {
+    position: fixed !important;
+    top: var(--banner-height, 100px) !important;  /* just under your banner */
+    left: 0.5rem !important;                       /* nudge in from left edge */
+    z-index: 3001 !important;                      /* above sidebar & banner */
+    transform: none !important;                    /* cancel any slide-off */
+    opacity: 1 !important;                         /* ensure it’s visible */
+    pointer-events: auto !important;               /* clickable again */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ─── 1) DataFrame header & Select-column CSS ────────────────────────────
+st.markdown(
+    """
+    <style>
+      /* Tint the table header row in Carlisle blue */
+      .stDataFrame thead th {
+        background-color: #004B87 !important;
+        color: white !important;
+      }
+      /* Light-grey background on the “Select” checkbox column */
+      .stDataFrame tbody tr td:first-child {
+        background-color: #F2F2F2;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ─── 2) Button styling ──────────────────────────────────────────────────
+st.markdown(
+    """
+    <style>
+      .stButton>button {
+        background-color: #004B87;
+        color: white;
+        border-radius: 4px;
+        padding: 0.5em 1em;
+      }
+      .stButton>button:hover {
+        background-color: #003366;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+# ───────────────────────────────────────────────────────────────────────
 # ─── Initialise session_state keys to sane defaults ────────────────────────
 st.session_state.setdefault("generate", False)
 st.session_state.setdefault("current_problem", "")
@@ -1631,7 +1917,7 @@ with st.sidebar:
                 st.session_state.df_ppt = df_ppt
 
                 st.success(f"✅ Parsed and enriched {len(enriched_cards)} slide concepts—see “Newly Generated” tab.")
-                # don’t change `stage`, so the UI will stay on “Newly Generated” next render
+                # don’t change stage, so the UI will stay on “Newly Generated” next render
                 st.rerun()
             else:
                 st.info("No concepts were enriched.")
@@ -2297,3 +2583,23 @@ if (
                         st.success(f"✅ Committed {successes} proposal(s) to storage.")
                     else:
                         st.warning("No proposals were successfully committed.")
+# ─── 3) Fixed footer ───────────────────────────────────────────────────
+st.markdown(
+    """
+    <style>
+      .app-footer {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background-color: #F2F2F2;
+        text-align: center;
+        padding: 8px 0;
+        font-size: 0.8rem;
+        color: #666;
+      }
+    </style>
+    <div class="app-footer">
+      Powered by Carlisle Research & Innovation • © 2025 Carlisle Construction Materials
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
