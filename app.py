@@ -3,41 +3,18 @@
 # ---------------------------------------------------------------------------
 from __future__ import annotations
 
-import streamlit as st
-import sys, inspect, json, time, logging, itertools
-from io import BytesIO
-from typing import List, Dict, Any
 
-import pandas as pd
-import deepdiff  # pip install deepdiff
-import requests
-import os
-from config import WORKFLOWS, DEFAULT_COST_UNIT, DEFAULT_TARGET_COST, MIN_ACCEPTABLE_TRL
-from config import SECTION_DEPENDENCIES
-from agents import AGENTS
-from utils.pptx_export import build_pptx_from_df
-from utils.pptx_import import read_concept_cards
-from utils.docx_export import build_docx_report
-from utils.pptx_import import read_concept_cards
-from utils.proposal_editor import ProposalEditor
-from utils.llm import serp_lookup
-from utils.trl_assessor import assess_trl_async, load_trl_rubric
-from utils.evidence import gather_evidence, sanitize_snippet
-from schemas import AGENT_JSON_SCHEMAS
-from agents import AGENT_MODEL_MAP
-from utils.llm import call_llm_with_schema_async
-from ai_searchcall import call_product_ideation_with_search
-import logging
 import streamlit as st
 from pathlib import Path
 import base64
 
-# now you can call set_page_config and the rest of your layout
 st.set_page_config(
     page_title="Agentic Ideation Studio – Carlisle",
+    page_icon="images/carlisle_logo.jpg",
     layout="wide",
-    initial_sidebar_state="expanded", 
+    initial_sidebar_state="expanded",
 )
+
 
 st.markdown(
     """
@@ -317,6 +294,37 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+
+import streamlit as st
+import sys, inspect, json, time, logging, itertools
+from io import BytesIO
+from typing import List, Dict, Any
+
+import pandas as pd
+import deepdiff  # pip install deepdiff
+import requests
+import os
+from config import WORKFLOWS, DEFAULT_COST_UNIT, DEFAULT_TARGET_COST, MIN_ACCEPTABLE_TRL
+from config import SECTION_DEPENDENCIES
+from agents import AGENTS
+from utils.pptx_export import build_pptx_from_df
+from utils.pptx_import import read_concept_cards
+from utils.docx_export import build_docx_report
+from utils.pptx_import import read_concept_cards
+from utils.proposal_editor import ProposalEditor
+from utils.llm import serp_lookup
+from utils.trl_assessor import assess_trl_async, load_trl_rubric
+from utils.evidence import gather_evidence, sanitize_snippet
+from schemas import AGENT_JSON_SCHEMAS
+from agents import AGENT_MODEL_MAP
+from utils.llm import call_llm_with_schema_async
+from ai_searchcall import call_product_ideation_with_search
+import logging
+import streamlit as st
+from pathlib import Path
+import base64
+
 # ───────────────────────────────────────────────────────────────────────
 # ─── Initialise session_state keys to sane defaults ────────────────────────
 st.session_state.setdefault("generate", False)
