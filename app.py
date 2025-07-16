@@ -104,12 +104,24 @@ st.markdown(f"""
 
 st.markdown("""
 <style>
-  /* 1) Make sure the collapse/expand rockstar is clickable */
-  button[data-testid="collapsedControl"],
-  div[data-testid="stSidebarCollapsedControl"] {
+  :root { --banner-height: 100px; }
+
+  /* 1) Let the sidebar and its header overflow so the button isn't clipped */
+  [data-testid="stSidebar"],
+  [data-testid="stSidebarHeader"] {
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 2000 !important;
+  }
+
+  /* 2) Force‐show both the collapse and the expand controls, wherever Streamlit put them */
+  button[aria-label="Collapse sidebar"],
+  button[aria-label="Expand sidebar"],
+  [data-testid="collapsedControl"],
+  [data-testid="stSidebarCollapsedControl"] {
     display: block !important;
     pointer-events: auto !important;
-    position: fixed !important;
+    position: absolute !important;
     top: var(--banner-height) !important;
     left: 0.5rem !important;
     z-index: 2001 !important;
@@ -119,15 +131,17 @@ st.markdown("""
     cursor: pointer;
   }
 
-  /* 2) Swap in a simple hamburger for the “expand” button */
-  button[data-testid="collapsedControl"]::before {
-    content: "☰";
-    font-size: 1.5rem;
-    color: white;
+  /* 3) Swap in a white ☰ for the Collapse action */
+  button[aria-label="Collapse sidebar"]::before,
+  [data-testid="collapsedControl"]::before {
+    content: "☰" !important;
+    font-size: 1.5rem !important;
+    color: white !important;
   }
 
-  /* 3) When it’s collapsed, recolor the little chevron */
-  div[data-testid="stSidebarCollapsedControl"] svg {
+  /* 4) When it’s collapsed, keep the little chevron white */
+  button[aria-label="Expand sidebar"] svg,
+  [data-testid="stSidebarCollapsedControl"] svg {
     fill: white !important;
   }
 </style>
