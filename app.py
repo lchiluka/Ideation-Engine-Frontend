@@ -105,19 +105,21 @@ st.markdown(f"""
 st.markdown("""
 <style>
   :root {
+    /* banner height */
     --banner-h: 100px;
-    --sidebar-w: 16rem;      /* full width */
-    --sidebar-w-c: 3rem;     /* collapsed gutter */
+    /* sidebar widths */
+    --sidebar-w: 16rem;    /* expanded width */
+    --sidebar-w-c: 3rem;   /* collapsed gutter */
   }
 
-  /* 1) Neutralize Streamlit’s built-in slide-out */
+  /* 1) Neutralize Streamlit’s built-in slide-out/margin */
   section[data-testid="stSidebar"] {
     transform: none !important;
     margin-left: 0      !important;
     transition: none    !important;
   }
 
-  /* 2) Expanded vs. collapsed states */
+  /* 2) Position expanded vs. collapsed under your banner */
   section[data-testid="stSidebar"][aria-expanded="true"] {
     position: fixed     !important;
     top:      var(--banner-h) !important;
@@ -137,17 +139,17 @@ st.markdown("""
     z-index:  1000       !important;
   }
 
-  /* 3) Shift your main content over to match */
+  /* 3) Shift the main app container to match the sidebar width */
   div[data-testid="stAppViewContainer"] {
     margin-left: var(--sidebar-w) !important;
     transition: margin-left .2s ease !important;
   }
-  section[aria-expanded="false"]
+  section[data-testid="stSidebar"][aria-expanded="false"]
     ~ div[data-testid="stAppViewContainer"] {
     margin-left: var(--sidebar-w-c) !important;
   }
 
-  /* 4) Always show & pin the toggle */
+  /* 4) Always show & pin the collapse/expand buttons */
   button[aria-label="Collapse sidebar"],
   button[aria-label="Expand sidebar"] {
     opacity: 1          !important;
@@ -163,7 +165,6 @@ st.markdown("""
   }
 </style>
 """, unsafe_allow_html=True)
-
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
