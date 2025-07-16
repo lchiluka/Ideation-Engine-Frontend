@@ -54,32 +54,32 @@ st.markdown(f"""
     }}
 
     /* 3) Kill Streamlit’s built-in slide-out transform & margin */
-    section[data-testid="stSidebar"] {{
+    [data-testid="stSidebar"] {{
       transform: none !important;
       margin-left: 0 !important;
       transition: none !important;
       position: fixed !important;
-      top:      var(--banner-h) !important;
-      height:   calc(100% - var(--banner-h)) !important;
+      top: var(--banner-h) !important;
+      height: calc(100% - var(--banner-h)) !important;
       overflow: visible !important;
       z-index: 1000 !important;
     }}
 
     /* 4) Expanded vs. collapsed widths */
-    section[data-testid="stSidebar"][aria-expanded="true"] {{
+    [data-testid="stSidebar"][aria-expanded="true"] {{
       width: var(--sidebar-w) !important;
     }}
-    section[data-testid="stSidebar"][aria-expanded="false"] {{
+    [data-testid="stSidebar"][aria-expanded="false"] {{
       width: var(--sidebar-w-c) !important;
     }}
 
     /* 5) Slide the app content over in sync */
-    div[data-testid="stAppViewContainer"] {{
+    [data-testid="stAppViewContainer"] {{
       margin-left: var(--sidebar-w) !important;
       transition: margin-left .2s ease !important;
     }}
-    section[data-testid="stSidebar"][aria-expanded="false"]
-      ~ div[data-testid="stAppViewContainer"] {{
+    [data-testid="stSidebar"][aria-expanded="false"]
+      ~ [data-testid="stAppViewContainer"] {{
       margin-left: var(--sidebar-w-c) !important;
     }}
 
@@ -92,10 +92,10 @@ st.markdown(f"""
       background: none    !important;
       border: none        !important;
       position: fixed     !important;
-      top:      calc(var(--banner-h) + 0.5rem) !important;
-      left:     0.5rem    !important;
-      z-index:  2000      !important;
-      cursor:   pointer   !important;
+      top: calc(var(--banner-h) + 0.5rem) !important;
+      left: 0.5rem        !important;
+      z-index: 2000       !important;
+      cursor: pointer     !important;
     }}
   </style>
 
@@ -106,7 +106,6 @@ st.markdown(f"""
     </h1>
   </div>
 """, unsafe_allow_html=True)
-
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
