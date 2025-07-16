@@ -22,9 +22,13 @@ _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 
 st.markdown(f"""
   <style>
-    :root {{ --banner-height: 100px; }}
+    :root {{ 
+      --banner-h: 100px;
+      --sidebar-w: 16rem;      /* width when expanded */
+      --sidebar-w-c: 3rem;     /* width when collapsed */
+    }}
 
-    /* Hide Streamlit’s default header & toolbar */
+    /* 1) Hide Streamlit’s default header & toolbar */
     [data-testid="stToolbar"],
     [data-testid="stHeader"] {{
       display: none !important;
@@ -33,138 +37,76 @@ st.markdown(f"""
       padding: 0 !important;
     }}
 
-    /* Your custom banner */
+    /* 2) Your custom banner */
     .banner {{
       position: fixed !important;
       top: 0; left: 0; right: 0;
-      height: var(--banner-height) !important;
+      height: var(--banner-h) !important;
       background-color: #003366;
       display: flex;
       align-items: center;
       padding: 0 24px;
-      z-index: 2000 !important;            /* ABOVE everything else */
+      z-index: 2000 !important;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }}
-
-    /* Push the app content down under your banner */
     .main .block-container {{
-      padding-top: var(--banner-height) !important;
+      padding-top: var(--banner-h) !important;
     }}
 
-    /* Sidebar starts below the banner */
-    [data-testid="stSidebar"] {{
+    /* 3) Kill Streamlit’s built-in slide-out transform & margin */
+    section[data-testid="stSidebar"] {{
+      transform: none !important;
+      margin-left: 0 !important;
+      transition: none !important;
       position: fixed !important;
-      top: var(--banner-height) !important;
-      height: calc(100% - var(--banner-height)) !important;
+      top:      var(--banner-h) !important;
+      height:   calc(100% - var(--banner-h)) !important;
       overflow: visible !important;
       z-index: 1000 !important;
     }}
 
-    /* Your other CSS: background stripes, DataFrame header tint, button styling… */
-    body, [data-testid="stAppViewContainer"] {{
-      background-color: #F2F2F2 !important;
+    /* 4) Expanded vs. collapsed widths */
+    section[data-testid="stSidebar"][aria-expanded="true"] {{
+      width: var(--sidebar-w) !important;
     }}
-    body::before {{
-      content: "";
-      position: fixed; top: 0; left: 0;
-      width:100%; height:100%;
-      background-image:
-        repeating-linear-gradient(
-          135deg,
-          rgba(0,75,135,0.05) 0px,
-          rgba(0,75,135,0.05) 1px,
-          transparent 1px,
-          transparent 20px
-        );
-      pointer-events: none; z-index: -1;
+    section[data-testid="stSidebar"][aria-expanded="false"] {{
+      width: var(--sidebar-w-c) !important;
     }}
-    .stDataFrame thead th {{
-      background-color: #004B87 !important;
-      color: white !important;
+
+    /* 5) Slide the app content over in sync */
+    div[data-testid="stAppViewContainer"] {{
+      margin-left: var(--sidebar-w) !important;
+      transition: margin-left .2s ease !important;
     }}
-    .stButton>button {{
-      background-color: #004B87;
-      color: white;
-      border-radius: 4px;
-      padding: 0.5em 1em;
+    section[data-testid="stSidebar"][aria-expanded="false"]
+      ~ div[data-testid="stAppViewContainer"] {{
+      margin-left: var(--sidebar-w-c) !important;
     }}
-    .stButton>button:hover {{
-      background-color: #003366;
+
+    /* 6) Always show & pin the collapse/expand button */
+    button[aria-label="Collapse sidebar"],
+    button[aria-label="Expand sidebar"] {{
+      opacity: 1          !important;
+      visibility: visible !important;
+      pointer-events: all !important;
+      background: none    !important;
+      border: none        !important;
+      position: fixed     !important;
+      top:      calc(var(--banner-h) + 0.5rem) !important;
+      left:     0.5rem    !important;
+      z-index:  2000      !important;
+      cursor:   pointer   !important;
     }}
-    /* …any other <style> blocks you had… */
   </style>
 
   <div class="banner">
-    <img src="{_logo_uri}" alt="Carlisle Logo" height="50" style="margin-right:1rem;">
+    <img src="{_logo_uri}" height="50" style="margin-right:1rem;">
     <h1 style="flex:1; color:white; margin:0; font-size:2rem; text-align:center;">
       Agentic Ideation Studio
     </h1>
   </div>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-  :root {
-    /* banner height */
-    --banner-h: 100px;
-    /* sidebar widths */
-    --sidebar-w: 16rem;    /* expanded width */
-    --sidebar-w-c: 3rem;   /* collapsed gutter */
-  }
-
-  /* 1) Neutralize Streamlit’s built-in slide-out/margin */
-  section[data-testid="stSidebar"] {
-    transform: none !important;
-    margin-left: 0      !important;
-    transition: none    !important;
-  }
-
-  /* 2) Position expanded vs. collapsed under your banner */
-  section[data-testid="stSidebar"][aria-expanded="true"] {
-    position: fixed     !important;
-    top:      var(--banner-h) !important;
-    left:     0               !important;
-    width:    var(--sidebar-w)   !important;
-    height:   calc(100% - var(--banner-h)) !important;
-    overflow: visible    !important;
-    z-index:  1000       !important;
-  }
-  section[data-testid="stSidebar"][aria-expanded="false"] {
-    position: fixed     !important;
-    top:      var(--banner-h) !important;
-    left:     0               !important;
-    width:    var(--sidebar-w-c) !important;
-    height:   calc(100% - var(--banner-h)) !important;
-    overflow: visible    !important;
-    z-index:  1000       !important;
-  }
-
-  /* 3) Shift the main app container to match the sidebar width */
-  div[data-testid="stAppViewContainer"] {
-    margin-left: var(--sidebar-w) !important;
-    transition: margin-left .2s ease !important;
-  }
-  section[data-testid="stSidebar"][aria-expanded="false"]
-    ~ div[data-testid="stAppViewContainer"] {
-    margin-left: var(--sidebar-w-c) !important;
-  }
-
-  /* 4) Always show & pin the collapse/expand buttons */
-  button[aria-label="Collapse sidebar"],
-  button[aria-label="Expand sidebar"] {
-    opacity: 1          !important;
-    visibility: visible !important;
-    pointer-events: all !important;
-    background: none    !important;
-    border: none        !important;
-    position: fixed     !important;
-    top:      calc(var(--banner-h) + 0.5rem) !important;
-    left:     0.5rem    !important;
-    z-index:  2000      !important;
-    cursor:   pointer   !important;
-  }
-</style>
-""", unsafe_allow_html=True)
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
