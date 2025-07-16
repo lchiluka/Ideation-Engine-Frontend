@@ -177,6 +177,56 @@ st.markdown("""
   }
 </style>
 """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+  :root {
+    /* tweak these to taste */
+    --sidebar-expanded-width: 18rem;
+    --sidebar-collapsed-width: 3.5rem;
+    --banner-height: 100px;
+  }
+
+  /* 1) Always cancel Streamlit’s translateX on the sidebar container */
+  section[data-testid="stSidebar"] {
+    transform: none !important;
+  }
+
+  /* 2) Expanded state: fixed width under your banner */
+  section[data-testid="stSidebar"][aria-expanded="true"] {
+    position: fixed !important;
+    top: var(--banner-height) !important;
+    left: 0 !important;
+    width: var(--sidebar-expanded-width) !important;
+    height: calc(100% - var(--banner-height)) !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
+  }
+
+  /* 3) Collapsed state: small gutter so the toggle never disappears */
+  section[data-testid="stSidebar"][aria-expanded="false"] {
+    position: fixed !important;
+    top: var(--banner-height) !important;
+    left: 0 !important;
+    width: var(--sidebar-collapsed-width) !important;
+    height: calc(100% - var(--banner-height)) !important;
+    overflow: visible !important;
+    z-index: 1000 !important;
+  }
+
+  /* 4) Make sure stSidebarContent is still clickable when collapsed */
+  [data-testid="stSidebarCollapsedControl"] {
+    display: block !important;
+    position: absolute !important;
+    top: 0.25rem !important;
+    left: 0.25rem !important;
+    z-index: 1001 !important;
+    cursor: pointer !important;
+  }
+  [data-testid="stSidebarCollapsedControl"] svg {
+    fill: white !important;
+  }
+</style>
+""", unsafe_allow_html=True)
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
 from io import BytesIO
