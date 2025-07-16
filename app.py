@@ -102,6 +102,17 @@ def save_concepts(problem: str, concepts: list[dict]) -> tuple[bool,int,str]:
             base["cost_estimate"]         = row.get("cost_estimate")
         payload.append(base)
 
+        # ⬇️ NEW: include everything else your Pydantic schema expects ⬇️
+        base["trl"]                         = row.get("trl")
+        base["trl_reasoning"]               = row.get("trl_reasoning")
+        base["trl_citations"]               = row.get("trl_citations")
+        base["validated_trl"]               = row.get("validated_trl")
+        base["validated_trl_reasoning"]     = row.get("validated_trl_reasoning")
+        base["validated_trl_citations"]     = row.get("validated_trl_citations")
+        base["components"]                  = row.get("components")
+        base["references"]                  = row.get("references")
+        base["constructive_critique"]       = row.get("constructive_critique")
+
     wf_param = "cross-industry" if workflow == "Cross-Industry Ideation" else "traditional"
     url = f"{API_BASE_URL}/concepts?workflow={wf_param}"
 
