@@ -57,25 +57,29 @@ st.markdown(f"""
       text-align: center;
     }}
 
-    /* Position the Streamlit sidebar directly below the banner */
+    /*
+    Streamlit Sidebar Styling:
+    - Use margin-top to push it down below the banner.
+    - Let Streamlit handle its position (left, width for collapse/expand),
+      height, overflow, and z-index.
+    */
     [data-testid="stSidebar"] {{
-      position: fixed !important; /* Keep it fixed */
-      top: var(--banner-h) !important; /* Start below the banner */
-      height: calc(100% - var(--banner-h)) !important; /* Fill remaining height */
-      /* All other sidebar properties (width, left, overflow, z-index, transitions)
-         are now managed by Streamlit's default behavior. */
+      margin-top: var(--banner-h) !important;
+      /* Streamlit will now manage other properties like position, width, height, etc. */
     }}
 
-    /* Shift the main content over to make room for the sidebar */
+    /*
+    Streamlit Main App Container Styling:
+    - Use padding-top to ensure content starts below the banner.
+    - Streamlit will manage margin-left for sidebar interaction.
+    */
     [data-testid="stAppViewContainer"] {{
-      /* Streamlit will now manage the margin-left and transitions dynamically
-         based on the sidebar's expanded/collapsed state. */
-      padding-top: var(--banner-h) !important; /* Add padding to main content to clear fixed banner */
+      padding-top: var(--banner-h) !important;
+      /* Streamlit will manage margin-left based on sidebar state */
     }}
 
-    /* Ensure the sidebar collapse/expand button is visible and correctly positioned */
-    /* Streamlit's default positioning for this button should now work without interference. */
-    /* No custom CSS needed for [data-testid="stSidebarCollapseButton"] */
+    /* No specific custom CSS needed for [data-testid="stSidebarCollapseButton"]
+       as Streamlit's default positioning should work now. */
 
   </style>
 
