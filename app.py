@@ -21,28 +21,28 @@ _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 st.markdown(f"""
   <style>
     :root {{
-      --banner-h: 100px;
-      --sidebar-w: 16rem;
+      --banner-h: 100px; /* Define banner height */
     }}
 
-    /* hide the default Streamlit header & toolbar */
+    /* Hide the default Streamlit header and toolbar */
     [data-testid="stToolbar"],
     [data-testid="stHeader"] {{
       display: none !important;
     }}
 
-    /* fixed top banner */
+    /* Fixed top banner styles */
     .banner {{
       position: fixed !important;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: var(--banner-h) !important;
       background-color: #003366;
       display: flex !important;
       align-items: center;
       justify-content: center;
       padding: 0 24px;
-      /* Ensure banner is above sidebar but below sidebar toggle */
-      z-index: 1999; /* Adjusted z-index */
+      z-index: 2000; /* Ensure banner is on top */
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }}
     .banner img {{
@@ -57,31 +57,26 @@ st.markdown(f"""
       text-align: center;
     }}
 
-    /* pin the sidebar full‑width below the banner */
+    /* Position the Streamlit sidebar directly below the banner */
     [data-testid="stSidebar"] {{
-      position: fixed !important;
-      top: var(--banner-h) !important;
-      height: calc(100% - var(--banner-h)) !important;
-      /* Allow overflow so the collapse/expand button can be visible */
-      overflow: auto !important; /* Changed to auto to allow scrolling if content overflows */
-      z-index: 1000;
+      position: fixed !important; /* Keep it fixed */
+      top: var(--banner-h) !important; /* Start below the banner */
+      height: calc(100% - var(--banner-h)) !important; /* Fill remaining height */
+      /* All other sidebar properties (width, left, overflow, z-index, transitions)
+         are now managed by Streamlit's default behavior. */
     }}
 
-    /* Ensure the sidebar collapse button is always on top and positioned correctly */
-    [data-testid="stSidebarCollapseButton"] {{
-      z-index: 2002 !important; /* Higher than banner and sidebar */
-      top: calc(var(--banner-h) + 0.5rem) !important; /* Position it correctly below the banner */
-      left: calc(var(--sidebar-w) - 1.5rem) !important; /* Adjust left to be at the edge of sidebar */
-      background: rgba(255,255,255,0.9); /* Add background for visibility */
-      border: 1px solid #ccc; /* Add border for visibility */
-      border-radius: 0 4px 4px 0; /* Match previous button style */
-    }}
-
-    /* shift the main content over to make room for sidebar */
+    /* Shift the main content over to make room for the sidebar */
     [data-testid="stAppViewContainer"] {{
-      /* Let Streamlit manage margin-left */
-      transition: margin-left .2s ease !important;
+      /* Streamlit will now manage the margin-left and transitions dynamically
+         based on the sidebar's expanded/collapsed state. */
+      padding-top: var(--banner-h) !important; /* Add padding to main content to clear fixed banner */
     }}
+
+    /* Ensure the sidebar collapse/expand button is visible and correctly positioned */
+    /* Streamlit's default positioning for this button should now work without interference. */
+    /* No custom CSS needed for [data-testid="stSidebarCollapseButton"] */
+
   </style>
 
   <div class="banner">
