@@ -19,6 +19,7 @@ _logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
 _logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
 _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 
+
 st.markdown(f"""
   <style>
     :root {{
@@ -26,21 +27,21 @@ st.markdown(f"""
       --sidebar-w: 16rem;
     }}
 
-    /* Hide default header & toolbar */
+    /* hide Streamlit’s header + toolbar */
     [data-testid="stToolbar"],
     [data-testid="stHeader"] {{
       display: none !important;
     }}
 
-    /* Banner: logo on left, title centered */
+    /* custom top banner */
     .banner {{
       position: fixed !important;
       top: 0; left: 0; right: 0;
       height: var(--banner-h) !important;
       background-color: #003366;
       display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
+      align-items: center;
+      justify-content: center;
       padding: 0 24px;
       z-index: 2000;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -55,12 +56,11 @@ st.markdown(f"""
       color: white;
       font-size: 2rem;
       text-align: center;
+      flex: 1;
     }}
 
-    /* Sidebar always full‑width, never slides away */
-    [data-testid="stSidebar"],
-    [data-testid="stSidebar"][aria-expanded="false"],
-    [data-testid="stSidebar"][aria-expanded="true"] {{
+    /* pin sidebar always open at full width */
+    [data-testid="stSidebar"] {{
       position: fixed !important;
       top: var(--banner-h) !important;
       left: 0 !important;
@@ -73,13 +73,14 @@ st.markdown(f"""
       z-index: 1000;
     }}
 
-    /* Shift app content over to make room for sidebar */
+    /* shift main content over */
     [data-testid="stAppViewContainer"] {{
       margin-left: var(--sidebar-w) !important;
       transition: margin-left .2s ease !important;
     }}
 
-    /* Hide collapse/expand toggle so it never disappears */
+    /* hide collapse/expand buttons entirely */
+    [data-testid="stSidebarCollapseButton"],
     button[aria-label="Collapse sidebar"],
     button[aria-label="Expand sidebar"] {{
       display: none !important;
@@ -91,8 +92,6 @@ st.markdown(f"""
     <h1>Agentic Ideation Studio</h1>
   </div>
 """, unsafe_allow_html=True)
-
-
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
