@@ -58,28 +58,28 @@ st.markdown(f"""
     }}
 
     /*
-    Streamlit Sidebar Styling:
-    - Use margin-top to push it down below the banner.
-    - Let Streamlit handle its position (left, width for collapse/expand),
-      height, overflow, and z-index.
+    Crucial Fix: Apply padding-top to the overall Streamlit App container.
+    This pushes ALL Streamlit content (sidebar + main content) down
+    below your fixed banner, allowing Streamlit's internal layout to work
+    without conflicts.
     */
-    [data-testid="stSidebar"] {{
-      margin-top: var(--banner-h) !important;
-      /* Streamlit will now manage other properties like position, width, height, etc. */
+    .st-emotion-cache-vk3ypn {{ /* This targets the highest-level app container */
+        padding-top: var(--banner-h) !important;
     }}
 
     /*
-    Streamlit Main App Container Styling:
-    - Use padding-top to ensure content starts below the banner.
-    - Streamlit will manage margin-left for sidebar interaction.
+    Remove all custom positioning/sizing on stSidebar and stAppViewContainer.
+    Let Streamlit manage these elements entirely, now that their parent is
+    pushed down.
     */
+    [data-testid="stSidebar"],
     [data-testid="stAppViewContainer"] {{
-      padding-top: var(--banner-h) !important;
-      /* Streamlit will manage margin-left based on sidebar state */
+      /* Remove all custom top, position, margin-top, height rules */
+      /* These elements will now flow naturally below the padded parent container */
+      /* And Streamlit's JS will handle their width, left, transform for collapse/expand */
     }}
 
-    /* No specific custom CSS needed for [data-testid="stSidebarCollapseButton"]
-       as Streamlit's default positioning should work now. */
+    /* No custom CSS needed for [data-testid="stSidebarCollapseButton"] */
 
   </style>
 
@@ -88,7 +88,6 @@ st.markdown(f"""
     <h1>Agentic Ideation Studio</h1>
   </div>
 """, unsafe_allow_html=True)
-
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
 from io import BytesIO
