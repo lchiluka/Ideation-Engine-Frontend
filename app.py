@@ -61,7 +61,6 @@ st.markdown(f"""
     [data-testid="stSidebar"] {{
       position: fixed !important;
       top: var(--banner-h) !important;
-      width: var(--sidebar-w) !important;
       height: calc(100% - var(--banner-h)) !important;
       /* Allow overflow so the collapse/expand button can be visible */
       overflow: auto !important; /* Changed to auto to allow scrolling if content overflows */
