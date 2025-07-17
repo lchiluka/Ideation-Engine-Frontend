@@ -66,6 +66,7 @@ st.markdown(f"""
     }}
     [data-testid="stSidebar"][aria-expanded="false"] {{
       width: var(--sidebar-w-c) !important;
+      transform: translateX(0) !important;
     }}
 
     /* 4) Shift the app content over in sync */
