@@ -17,7 +17,6 @@ st.set_page_config(
 _logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
 _logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
 _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
- 
 
 st.markdown(f"""
   <style>
@@ -26,21 +25,21 @@ st.markdown(f"""
       --sidebar-w: 16rem;
     }}
 
-    /* Hide default header & toolbar */
+    /* hide the default Streamlit header & toolbar */
     [data-testid="stToolbar"],
     [data-testid="stHeader"] {{
       display: none !important;
     }}
 
-    /* Banner: logo on left, title centered */
+    /* fixed top banner */
     .banner {{
       position: fixed !important;
       top: 0; left: 0; right: 0;
       height: var(--banner-h) !important;
       background-color: #003366;
       display: flex !important;
-      justify-content: center !important;
-      align-items: center !important;
+      align-items: center;
+      justify-content: center;
       padding: 0 24px;
       z-index: 2000;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -57,9 +56,8 @@ st.markdown(f"""
       text-align: center;
     }}
 
-    /* Pin the sidebar */
-    [data-testid="stSidebar"],
-    [data-testid="stSidebar"][aria-expanded] {{
+    /* pin the sidebar full‑width below the banner */
+    [data-testid="stSidebar"] {{
       position: fixed !important;
       top: var(--banner-h) !important;
       left: 0 !important;
@@ -71,23 +69,22 @@ st.markdown(f"""
       z-index: 1000;
     }}
 
-    /* Shift main content over */
+    /* shift the main content over to make room for sidebar */
     [data-testid="stAppViewContainer"] {{
       margin-left: var(--sidebar-w) !important;
       transition: margin-left .2s ease !important;
     }}
 
-    /* Style our custom toggle button */
+    /* style our custom toggle button */
     #toggle-sidebar-btn {{
-      position: fixed;
-      top: calc(var(--banner-h) + 1rem);
-      left: calc(var(--sidebar-w) - 1.5rem);
-      width: 1.5rem;
-      height: 1.5rem;
+      position: fixed !important;
+      top: calc(var(--banner-h) + 0.5rem) !important;
+      left: calc(var(--sidebar-w) - 1.5rem) !important;
+      width: 1.5rem; height: 1.5rem;
       background: rgba(255,255,255,0.9);
       border: 1px solid #ccc;
       border-radius: 0 4px 4px 0;
-      font-size: 1rem;
+      font-size: 1.2rem;
       line-height: 1.5rem;
       text-align: center;
       cursor: pointer;
@@ -100,26 +97,24 @@ st.markdown(f"""
     <h1>Agentic Ideation Studio</h1>
   </div>
 
-  <!-- the little hamburger icon -->
+  <!-- our little hamburger toggle -->
   <button id="toggle-sidebar-btn">&#9776;</button>
 
   <script>
-    // forward clicks to Streamlit's built‑in toggle
+    // on click, fire a synthetic Ctrl+B to toggle Streamlit’s sidebar
     document
       .getElementById("toggle-sidebar-btn")
       .addEventListener("click", () => {{
-        const sb = document.querySelector('[data-testid="stSidebar"]');
-        if (!sb) return;
-        const expanded = sb.getAttribute("aria-expanded") === "true";
-        const label   = expanded ? "Collapse sidebar" : "Expand sidebar";
-        const builtBtn = Array.from(
-          document.querySelectorAll('button[aria-label]')
-        ).find(b => b.getAttribute("aria-label") === label);
-        if (builtBtn) builtBtn.click();
+        document.dispatchEvent(new KeyboardEvent("keydown", {{
+          key: "b",
+          code: "KeyB",
+          keyCode: 66,
+          ctrlKey: true,
+          bubbles: true
+        }}));
       }});
   </script>
 """, unsafe_allow_html=True)
- 
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
