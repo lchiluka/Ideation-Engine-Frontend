@@ -63,9 +63,7 @@ st.markdown(f"""
       left: 0 !important;
       width: var(--sidebar-w) !important;
       height: calc(100% - var(--banner-h)) !important;
-      transform: none !important;
       overflow: visible !important;
-      transition: none !important;
       z-index: 1000;
     }}
 
@@ -115,6 +113,7 @@ st.markdown(f"""
       }});
   </script>
 """, unsafe_allow_html=True)
+
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
