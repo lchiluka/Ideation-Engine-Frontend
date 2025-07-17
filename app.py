@@ -19,74 +19,65 @@ _logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
 _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 
 st.markdown(f"""
-  <style>
-    :root {{
-      --banner-h: 100px; /* Define banner height */
-    }}
+    <style>
+        :root {{
+            --banner-h: 100px; /* Define banner height */
+        }}
 
-    /* Hide the default Streamlit header and toolbar */
-    [data-testid="stToolbar"],
-    [data-testid="stHeader"] {{
-      display: none !important;
-    }}
+        /* Hide the default Streamlit header and toolbar */
+        [data-testid="stToolbar"],
+        [data-testid="stHeader"] {{
+            display: none !important;
+        }}
 
-    /* Fixed top banner styles */
-    .banner {{
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: var(--banner-h) !important;
-      background-color: #003366;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      padding: 0 24px;
-      z-index: 2000; /* Ensure banner is on top */
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }}
-    .banner img {{
-      position: absolute;
-      left: 24px;
-      height: 50px;
-    }}
-    .banner h1 {{
-      margin: 0;
-      color: white;
-      font-size: 2rem;
-      text-align: center;
-    }}
+        /* Fixed top banner styles */
+        .banner {{
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--banner-h) !important;
+            background-color: #003366;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 0 24px;
+            z-index: 2000; /* Ensure banner is on top of everything */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }}
+        .banner img {{
+            position: absolute;
+            left: 24px;
+            height: 50px;
+        }}
+        .banner h1 {{
+            margin: 0;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+        }}
 
-    /*
-    Crucial Fix: Apply padding-top to the overall Streamlit App container.
-    This pushes ALL Streamlit content (sidebar + main content) down
-    below your fixed banner, allowing Streamlit's internal layout to work
-    without conflicts.
-    */
-    .st-emotion-cache-vk3ypn {{ /* This targets the highest-level app container */
-        padding-top: var(--banner-h) !important;
-    }}
+        /* CRUCIAL FIX: Apply margin-top to the entire HTML body */
+        /* This pushes ALL Streamlit content (sidebar, main content) down,
+           making space for the fixed banner without interfering with Streamlit's layout. */
+        body {{
+            margin-top: var(--banner-h) !important;
+        }}
 
-    /*
-    Remove all custom positioning/sizing on stSidebar and stAppViewContainer.
-    Let Streamlit manage these elements entirely, now that their parent is
-    pushed down.
-    */
-    [data-testid="stSidebar"],
-    [data-testid="stAppViewContainer"] {{
-      /* Remove all custom top, position, margin-top, height rules */
-      /* These elements will now flow naturally below the padded parent container */
-      /* And Streamlit's JS will handle their width, left, transform for collapse/expand */
-    }}
+        /*
+        Remove ALL other custom CSS that targets Streamlit's internal components.
+        Let Streamlit manage:
+        - [data-testid="stSidebar"]'s position, width, height, overflow, z-index, collapse/expand behavior.
+        - [data-testid="stAppViewContainer"]'s margin-left, padding-top.
+        - [data-testid="stSidebarCollapseButton"]'s position and visibility.
+        */
 
-    /* No custom CSS needed for [data-testid="stSidebarCollapseButton"] */
+    </style>
 
-  </style>
-
-  <div class="banner">
-    <img src="{_logo_uri}" />
-    <h1>Agentic Ideation Studio</h1>
-  </div>
+    <div class="banner">
+        <img src="{_logo_uri}" />
+        <h1>Agentic Ideation Studio</h1>
+    </div>
 """, unsafe_allow_html=True)
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
