@@ -18,19 +18,21 @@ _logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
 _logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
 _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
  
+"
+
 st.markdown(f"""
   <style>
     :root {{
       --banner-h: 100px;
       --sidebar-w: 16rem;
     }}
- 
+
     /* Hide default header & toolbar */
     [data-testid="stToolbar"],
     [data-testid="stHeader"] {{
       display: none !important;
     }}
- 
+
     /* Banner: logo on left, title centered */
     .banner {{
       position: fixed !important;
@@ -55,52 +57,68 @@ st.markdown(f"""
       font-size: 2rem;
       text-align: center;
     }}
- 
-    /* Sidebar always full‑width, never slides away */
+
+    /* Pin the sidebar */
     [data-testid="stSidebar"],
-    [data-testid="stSidebar"][aria-expanded="false"],
-    [data-testid="stSidebar"][aria-expanded="true"] {{
+    [data-testid="stSidebar"][aria-expanded] {{
       position: fixed !important;
       top: var(--banner-h) !important;
       left: 0 !important;
       width: var(--sidebar-w) !important;
       height: calc(100% - var(--banner-h)) !important;
       transform: none !important;
-      margin-left: 0 !important;
       overflow: visible !important;
       transition: none !important;
       z-index: 1000;
     }}
- 
-    /* Shift app content over to make room for sidebar */
+
+    /* Shift main content over */
     [data-testid="stAppViewContainer"] {{
       margin-left: var(--sidebar-w) !important;
       transition: margin-left .2s ease !important;
     }}
- 
-    /* 5) Reposition the collapse/expand toggle so it sits just under the banner at the right edge of the sidebar */
-    button[aria-label="Collapse sidebar"],
-    button[aria-label="Expand sidebar"] {{
-      position: fixed !important;
-      /* 1rem below the banner */
-      top: calc(var(--banner-h) + 1rem) !important;
-      /* flush against the sidebar’s right edge: 16rem minus 1.5rem = 14.5rem */
-      left: calc(var(--sidebar-w) - 1.5rem) !important;
-      width: 1.5rem !important;
-      height: 1.5rem !important;
-      background: rgba(255,255,255,0.9) !important;
-      border: 1px solid #ccc !important;
-      border-radius: 0 4px 4px 0 !important;
-      z-index: 2001 !important;
-      pointer-events: all !important;
-      cursor: pointer !important;
+
+    /* Style our custom toggle button */
+    #toggle-sidebar-btn {{
+      position: fixed;
+      top: calc(var(--banner-h) + 1rem);
+      left: calc(var(--sidebar-w) - 1.5rem);
+      width: 1.5rem;
+      height: 1.5rem;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #ccc;
+      border-radius: 0 4px 4px 0;
+      font-size: 1rem;
+      line-height: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      z-index: 2001;
     }}
   </style>
- 
+
   <div class="banner">
     <img src="{_logo_uri}" />
     <h1>Agentic Ideation Studio</h1>
   </div>
+
+  <!-- the little hamburger icon -->
+  <button id="toggle-sidebar-btn">&#9776;</button>
+
+  <script>
+    // forward clicks to Streamlit's built‑in toggle
+    document
+      .getElementById("toggle-sidebar-btn")
+      .addEventListener("click", () => {{
+        const sb = document.querySelector('[data-testid="stSidebar"]');
+        if (!sb) return;
+        const expanded = sb.getAttribute("aria-expanded") === "true";
+        const label   = expanded ? "Collapse sidebar" : "Expand sidebar";
+        const builtBtn = Array.from(
+          document.querySelectorAll('button[aria-label]')
+        ).find(b => b.getAttribute("aria-label") === label);
+        if (builtBtn) builtBtn.click();
+      }});
+  </script>
 """, unsafe_allow_html=True)
  
 
