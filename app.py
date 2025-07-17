@@ -41,7 +41,8 @@ st.markdown(f"""
       align-items: center;
       justify-content: center;
       padding: 0 24px;
-      z-index: 2000;
+      /* Ensure banner is above sidebar but below sidebar toggle */
+      z-index: 1999; /* Adjusted z-index */
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }}
     .banner img {{
@@ -63,30 +64,25 @@ st.markdown(f"""
       left: 0 !important;
       width: var(--sidebar-w) !important;
       height: calc(100% - var(--banner-h)) !important;
-      overflow: visible !important;
+      /* Allow overflow so the collapse/expand button can be visible */
+      overflow: auto !important; /* Changed to auto to allow scrolling if content overflows */
       z-index: 1000;
+    }}
+
+    /* Ensure the sidebar collapse button is always on top and positioned correctly */
+    [data-testid="stSidebarCollapseButton"] {{
+      z-index: 2002 !important; /* Higher than banner and sidebar */
+      top: calc(var(--banner-h) + 0.5rem) !important; /* Position it correctly below the banner */
+      left: calc(var(--sidebar-w) - 1.5rem) !important; /* Adjust left to be at the edge of sidebar */
+      background: rgba(255,255,255,0.9); /* Add background for visibility */
+      border: 1px solid #ccc; /* Add border for visibility */
+      border-radius: 0 4px 4px 0; /* Match previous button style */
     }}
 
     /* shift the main content over to make room for sidebar */
     [data-testid="stAppViewContainer"] {{
-      margin-left: var(--sidebar-w) !important;
+      /* Let Streamlit manage margin-left */
       transition: margin-left .2s ease !important;
-    }}
-
-    /* style our custom toggle button */
-    #toggle-sidebar-btn {{
-      position: fixed !important;
-      top: calc(var(--banner-h) + 0.5rem) !important;
-      left: calc(var(--sidebar-w) - 1.5rem) !important;
-      width: 1.5rem; height: 1.5rem;
-      background: rgba(255,255,255,0.9);
-      border: 1px solid #ccc;
-      border-radius: 0 4px 4px 0;
-      font-size: 1.2rem;
-      line-height: 1.5rem;
-      text-align: center;
-      cursor: pointer;
-      z-index: 2001;
     }}
   </style>
 
@@ -94,26 +90,7 @@ st.markdown(f"""
     <img src="{_logo_uri}" />
     <h1>Agentic Ideation Studio</h1>
   </div>
-
-  <!-- our little hamburger toggle -->
-  <button id="toggle-sidebar-btn">&#9776;</button>
-
-  <script>
-    // on click, fire a synthetic Ctrl+B to toggle Streamlit’s sidebar
-    document
-      .getElementById("toggle-sidebar-btn")
-      .addEventListener("click", () => {{
-        document.dispatchEvent(new KeyboardEvent("keydown", {{
-          key: "b",
-          code: "KeyB",
-          keyCode: 66,
-          ctrlKey: true,
-          bubbles: true
-        }}));
-      }});
-  </script>
 """, unsafe_allow_html=True)
-
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
