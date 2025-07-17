@@ -18,7 +18,6 @@ _logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
 _logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
 _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
  
-"
 
 st.markdown(f"""
   <style>
