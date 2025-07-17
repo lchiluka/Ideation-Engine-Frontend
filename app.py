@@ -78,19 +78,21 @@ st.markdown(f"""
       transition: margin-left .2s ease !important;
     }}
  
-    /* 5) Reposition the collapse/expand toggle below the banner */
+    /* 5) Reposition the collapse/expand toggle so it sits just under the banner at the right edge of the sidebar */
     button[aria-label="Collapse sidebar"],
     button[aria-label="Expand sidebar"] {{
       position: fixed !important;
-      top: calc(var(--banner-h) + 0.5rem) !important;   /* push it below the blue bar */
-      left: 0.5rem !important;
-      z-index: 2001 !important;
-      opacity: 1 !important;
-      visibility: visible !important;
-      pointer-events: all !important;
-      background: rgba(255,255,255,0.8) !important;
-      border: none !important;
+      /* 1rem below the banner */
+      top: calc(var(--banner-h) + 1rem) !important;
+      /* flush against the sidebar’s right edge: 16rem minus 1.5rem = 14.5rem */
+      left: calc(var(--sidebar-w) - 1.5rem) !important;
+      width: 1.5rem !important;
+      height: 1.5rem !important;
+      background: rgba(255,255,255,0.9) !important;
+      border: 1px solid #ccc !important;
       border-radius: 0 4px 4px 0 !important;
+      z-index: 2001 !important;
+      pointer-events: all !important;
       cursor: pointer !important;
     }}
   </style>
