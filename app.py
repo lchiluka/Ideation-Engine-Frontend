@@ -53,6 +53,7 @@ st.markdown(f"""
     [data-testid="stSidebar"] {{
       position: fixed !important;
       top: var(--banner-h) !important;
+      left: 0 !important;
       height: calc(100% - var(--banner-h)) !important;
       transform: none !important;
       margin-left: 0 !important;
