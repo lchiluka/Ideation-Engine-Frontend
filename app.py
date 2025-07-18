@@ -98,6 +98,18 @@ st.markdown(f"""
   button[aria-label="Expand sidebar"] {{
     display: none !important;
   }}
+            
+  
+  /* 6) Show the “running” spinner just under the banner, on the left */
+  [data-testid="stStatusWidget"] {{
+    display: block !important;
+    position: fixed !important;
+    top: var(--banner-h) !important;
+    left: 1rem !important;
+    z-index: 2001 !important;
+    transform: scale(1.2);
+  }}
+
 </style>
 
 <div class="banner">
