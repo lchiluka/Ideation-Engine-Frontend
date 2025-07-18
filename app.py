@@ -13,85 +13,57 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-# --- CUSTOM BANNER ---
-# (Using a placeholder for the logo path for this example)
-# Make sure 'images/isle_logo.png' is the correct path to your logo file.
-# For demonstration, we'll encode a simple SVG as a placeholder.
-def get_logo_uri():
-    logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
-    if logo_path.exists():
-        logo_data = base64.b64encode(logo_path.read_bytes()).decode("utf-8")
-        return f"data:image/jpg;base64,{logo_data}"
-    # Fallback SVG logo if the image is not found
-    svg_logo = """
-    <svg width="100" height="40" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100" height="40" rx="5" ry="5" style="fill:#cccccc;" />
-        <text x="50" y="25" font-family="Verdana" font-size="16" fill="black" text-anchor="middle">LOGO</text>
-    </svg>
-    """
-    logo_data = base64.b64encode(svg_logo.encode("utf-8")).decode("utf-8")
-    return f"data:image/svg+xml;base64,{logo_data}"
+# right after st.set_page_config(...)
+_logo_path = Path(__file__).parent / "images" / "carlisle_logo.jpg"
+_logo_data = base64.b64encode(_logo_path.read_bytes()).decode("utf-8")
+_logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 
-# Inject the custom CSS
 st.markdown(f"""
-    <style>
-        /* Define banner height as a CSS variable */
-        :root {{
-            --banner-height: 80px;
-        }}
+<style>
+  :root {{
+    --banner-h: 100px;  /* height of your banner */
+  }}
 
-        /* Hide the default Streamlit header, toolbar, and footer */
-        [data-testid="stHeader"],
-        [data-testid="stToolbar"],
-        [data-testid="stFooter"] {{
-            display: none !important;
-        }}
-        
-        /* The custom banner */
-        .banner {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: var(--banner-height);
-            background-color: #003366; /* Dark blue */
-            display: flex;
-            align-items: center;
-            justify-content: center; /* Center title */
-            padding: 0 24px;
-            z-index: 100; /* High z-index to be on top */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }}
-        .banner img {{
-            position: absolute; /* Position logo within the banner */
-            left: 32px;
-            height: 40px; /* Adjust logo height */
-        }}
-        .banner h1 {{
-            margin: 0;
-            color: white;
-            font-size: 2rem;
-        }}
+  /* 1) Hide Streamlit’s default header & toolbar */
+  [data-testid="stToolbar"],
+  [data-testid="stHeader"] {{
+    display: none !important;
+  }}
 
-        /* === THE KEY FIX === */
-        /* Add top padding to the main content and sidebar content containers */
-        /* This pushes the content down to make space for the banner */
+  /* 2) Your fixed top banner */
+  .banner {{
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    height: var(--banner-h) !important;
+    background-color: #003366;
+    display: flex !important;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 2000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }}
+  .banner img {{
+    height: 50px;
+    margin-right: 1rem;
+  }}
+  .banner h1 {{
+    margin: 0;
+    color: white;
+    font-size: 2rem;
+    text-align: center;
+    flex: 1;
+  }}
 
-        /* Main content area */
-        [data-testid="block-container"] {{
-            padding-top: calc(var(--banner-height) + 2rem);
-        }}
+  /* 3) Push all Streamlit content (sidebar & main) below the banner */
+  body {{
+    margin-top: var(--banner-h) !important;
+  }}
+</style>
 
-        /* Sidebar content area */
-        [data-testid="stSidebarUserContent"] {{
-            padding-top: 5rem;
-        }}
-    </style>
-
-    <div class="banner">
-        <img src="https://i.imgur.com/2y6BSts.png" alt="Logo"/>
-        <h1>Agentic Ideation Studio</h1>
-    </div>
+<div class="banner">
+  <img src="{_logo_uri}" />
+  <h1>Agentic Ideation Studio</h1>
+</div>
 """, unsafe_allow_html=True)
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
