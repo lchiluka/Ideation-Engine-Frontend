@@ -45,13 +45,11 @@ st.markdown(f"""
     z-index: 2000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }}
-  /* logo on the left */
   .banner img {{
     position: absolute !important;
     left: 24px !important;
     height: 50px;
   }}
-  /* title dead‑center */
   .banner h1 {{
     margin: 0 auto !important;
     color: white;
@@ -59,12 +57,12 @@ st.markdown(f"""
     text-align: center;
   }}
 
-  /* 3) Push all Streamlit content (sidebar + main) below banner */
+  /* 3) Push all Streamlit content below the banner */
   body {{
     margin-top: var(--banner-h) !important;
   }}
 
-  /* 4) Pin the sidebar always full‑width, never collapsible */
+  /* 4) Pin the sidebar full‑width, never collapsible */
   [data-testid="stSidebar"] {{
     position: fixed !important;
     top: var(--banner-h) !important;
@@ -77,13 +75,11 @@ st.markdown(f"""
     z-index: 1000;
   }}
   [data-testid="stSidebar"][aria-expanded="false"] {{
-    /* override “collapsed” state too */
     width: var(--sidebar-w) !important;
     transform: none !important;
   }}
-            
-  /* ►  Push *everything* right by the sidebar width */
-  /* This handles both the overall app view container and the inner block container */
+
+  /* 5) Shift main content right by sidebar width */
   [data-testid="stAppViewContainer"] {{
     margin-left: var(--sidebar-w) !important;
     transition: margin-left .2s ease !important;
@@ -92,30 +88,65 @@ st.markdown(f"""
     margin-left: var(--sidebar-w) !important;
   }}
 
-  /* 5) Hide the built‑in collapse/expand controls */
+  /* 6) Hide Streamlit’s built‑in collapse controls */
   [data-testid="stSidebarCollapseButton"],
   button[aria-label="Collapse sidebar"],
   button[aria-label="Expand sidebar"] {{
     display: none !important;
   }}
-            
-  
-  /* 6) Show the “running” spinner just under the banner, on the left */
-  [data-testid="stStatusWidget"] {{
+
+  /* 7) (Optional) If you ever need the default status widget visible: */
+  /* [data-testid="stStatusWidget"] {{
     display: block !important;
     position: fixed !important;
     top: var(--banner-h) !important;
     left: 1rem !important;
     z-index: 2001 !important;
     transform: scale(1.2);
-  }}
+  }} */
 
+  /* 8) Custom spinner CSS */
+  #custom-loading {{
+    display: none;
+    position: fixed;
+    top: calc(var(--banner-h) + 0.5rem);
+    right: 1rem;
+    z-index: 2001;
+  }}
+  #custom-loading .loader {{
+    box-sizing: border-box;
+    width: 24px; height: 24px;
+    border: 4px solid rgba(255,255,255,0.6);
+    border-top-color: #003366;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }}
+  @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
 </style>
 
 <div class="banner">
   <img src="{_logo_uri}" />
   <h1>Agentic Ideation Studio</h1>
 </div>
+
+<!-- custom spinner element -->
+<div id="custom-loading"><div class="loader"></div></div>
+
+<script>
+  // toggle our custom spinner in sync with Streamlit’s busy indicator
+  const status = document.querySelector('[data-testid="stStatusWidget"]');
+  const loader = document.getElementById('custom-loading');
+  if (status && loader) {{
+    function update() {{
+      loader.style.display = status.offsetParent === null ? 'none' : 'block';
+    }}
+    new MutationObserver(update).observe(status, {{
+      attributes: true,
+      attributeFilter: ['style','class']
+    }});
+    update();
+  }}
+</script>
 """, unsafe_allow_html=True)
 
 
