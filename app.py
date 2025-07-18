@@ -20,135 +20,84 @@ _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 
 
 st.markdown(f"""
-<style>
-  :root {{
-    --banner-h: 100px;
-    --sidebar-w: 16rem;
-  }}
-
-  /* 1) Hide default header & toolbar */
-  [data-testid="stToolbar"],
-  [data-testid="stHeader"] {{
-    display: none !important;
-  }}
-
-  /* 2) Fixed top banner */
-  .banner {{
-    position: fixed !important;
-    top: 0; left: 0; right: 0;
-    height: var(--banner-h) !important;
-    background-color: #003366;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 24px;
-    z-index: 2000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }}
-  .banner img {{
-    position: absolute !important;
-    left: 24px !important;
-    height: 50px;
-  }}
-  .banner h1 {{
-    margin: 0 auto !important;
-    color: white;
-    font-size: 2rem;
-    text-align: center;
-  }}
-
-  /* 3) Push all Streamlit content below the banner */
-  body {{
-    margin-top: var(--banner-h) !important;
-  }}
-
-  /* 4) Pin the sidebar full‑width, never collapsible */
-  [data-testid="stSidebar"] {{
-    position: fixed !important;
-    top: var(--banner-h) !important;
-    left: 0 !important;
-    width: var(--sidebar-w) !important;
-    height: calc(100% - var(--banner-h)) !important;
-    transform: none !important;
-    overflow: visible !important;
-    transition: none !important;
-    z-index: 1000;
-  }}
-  [data-testid="stSidebar"][aria-expanded="false"] {{
-    width: var(--sidebar-w) !important;
-    transform: none !important;
-  }}
-
-  /* 5) Shift main content right by sidebar width */
-  [data-testid="stAppViewContainer"] {{
-    margin-left: var(--sidebar-w) !important;
-    transition: margin-left .2s ease !important;
-  }}
-  .main .block-container {{
-    margin-left: var(--sidebar-w) !important;
-  }}
-
-  /* 6) Hide built‑in sidebar toggles */
-  [data-testid="stSidebarCollapseButton"],
-  button[aria-label="Collapse sidebar"],
-  button[aria-label="Expand sidebar"] {{
-    display: none !important;
-  }}
-
-  /* 7) Re‑enable the default “busy” indicator */
-  [data-testid="stStatusWidget"] {{
-    display: block !important;
-    position: fixed !important;
-    top: var(--banner-h) !important;
-    left: 1rem !important;
-    z-index: 2001 !important;
-    transform: scale(1.2) !important;
-  }}
-
-  /* 8) Custom spinner element (will mirror the default) */
-  #custom-loading {{
-    display: none;
-    position: fixed;
-    top: calc(var(--banner-h) + 0.5rem);
-    right: 1rem;
-    z-index: 2002;
-  }}
-  #custom-loading .loader {{
-    box-sizing: border-box;
-    width: 24px; height: 24px;
-    border: 4px solid rgba(255,255,255,0.6);
-    border-top-color: #003366;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }}
-  @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
-</style>
-
-<div class="banner">
-  <img src="{_logo_uri}" />
-  <h1>Agentic Ideation Studio</h1>
-</div>
-
-<!-- your mirror‑spinner -->
-<div id="custom-loading"><div class="loader"></div></div>
-
-<script>
-  const status = document.querySelector('[data-testid="stStatusWidget"]');
-  const loader = document.getElementById('custom-loading');
-  if (status && loader) {{
-    function update() {{
-      // use computed style in case Streamlit toggles visibility/display
-      const disp = window.getComputedStyle(status).getPropertyValue('display');
-      loader.style.display = disp === 'none' ? 'none' : 'block';
+  <style>
+    :root {{
+      --banner-h: 100px;
+      --sidebar-w: 16rem;
     }}
-    // observe when Streamlit shows/hides its own spinner
-    new MutationObserver(update).observe(status, {{
-      attributes: true,
-      attributeFilter: ['style','class']
-    }});
-    update();
-  }}
-</script>
+
+    /* 1) Hide default header & toolbar */
+    [data-testid="stToolbar"],
+    [data-testid="stHeader"] {{
+      display: none !important;
+    }}
+
+    /* 2) Fixed top banner */
+    .banner {{
+      position: fixed !important;
+      top: 0; left: 0; right: 0;
+      height: var(--banner-h) !important;
+      background-color: #003366;
+      display: flex !important;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 2000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }}
+    .banner img {{
+      position: absolute;
+      left: 24px;
+      height: 50px;
+    }}
+    .banner h1 {{
+      margin: 0 auto;
+      color: white;
+      font-size: 2rem;
+      text-align: center;
+    }}
+
+    /* 3) Push app content down under banner */
+    body {{
+      margin-top: var(--banner-h) !important;
+    }}
+
+    /* 4) Pin sidebar full‑width below banner */
+    [data-testid="stSidebar"] {{
+      position: fixed !important;
+      top: var(--banner-h) !important;
+      left: 0 !important;
+      width: var(--sidebar-w) !important;
+      height: calc(100% - var(--banner-h)) !important;
+      transform: none !important;
+      overflow: visible !important;
+      transition: none !important;
+      z-index: 1000;
+    }}
+
+    /* 5) Shift main canvas right by sidebar width */
+    [data-testid="stAppViewContainer"] {{
+      margin-left: var(--sidebar-w) !important;
+      transition: margin-left .2s ease !important;
+    }}
+    .main .block-container {{
+      margin-left: var(--sidebar-w) !important;
+    }}
+
+    /* 6) Re‑show & reposition Streamlit’s built‑in “busy” spinner */
+    [data-testid="stStatusWidget"] {{
+      display: block !important;           /* force visible */
+      position: fixed !important;          /* remove default flow */
+      top: var(--banner-h) !important;     /* directly under banner */
+      right: 1rem !important;              /* near the right edge */
+      z-index: 3000 !important;
+      transform: scale(1.3) !important;    /* enlarge it slightly */
+    }}
+  </style>
+
+  <div class="banner">
+    <img src="{_logo_uri}" />
+    <h1>Agentic Ideation Studio</h1>
+  </div>
 """, unsafe_allow_html=True)
 
 
