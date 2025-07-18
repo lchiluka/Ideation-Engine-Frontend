@@ -21,45 +21,48 @@ _logo_uri  = f"data:image/jpeg;base64,{_logo_data}"
 st.markdown(f"""
 <style>
   :root {{
-    --banner-h: 100px;  /* height of your banner */
+    --banner-h: 100px;
   }}
 
-  /* 1) Hide Streamlit’s default header & toolbar */
+  /* hide Streamlit header & toolbar */
   [data-testid="stToolbar"],
   [data-testid="stHeader"] {{
     display: none !important;
   }}
 
-  /* 2) Your fixed top banner */
+  /* fixed top banner */
   .banner {{
     position: fixed !important;
     top: 0; left: 0; right: 0;
     height: var(--banner-h) !important;
     background-color: #003366;
     display: flex !important;
-    align-items: center;
+    align-items: center !important;
+    justify-content: center !important;
     padding: 0 24px;
     z-index: 2000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }}
+  /* move logo to the right edge */
   .banner img {{
+    position: absolute;
+    right: 24px !important;
     height: 50px;
-    margin-right: 1rem;
   }}
+  /* keep title dead‑center */
   .banner h1 {{
-    margin: 0;
+    margin: 0 auto !important;
     color: white;
     font-size: 2rem;
-    flex: 1;
     text-align: center;
   }}
 
-  /* 3) Push ALL Streamlit content (sidebar & main) below the banner */
+  /* push all Streamlit content below the banner */
   body {{
     margin-top: var(--banner-h) !important;
   }}
 
-  /* 4) Hide the built‑in sidebar toggle so it can’t be clicked */
+  /* hide the built‑in sidebar toggle so sidebar never collapses */
   button[aria-label="Collapse sidebar"],
   button[aria-label="Expand sidebar"] {{
     display: none !important;
@@ -71,7 +74,6 @@ st.markdown(f"""
   <h1>Agentic Ideation Studio</h1>
 </div>
 """, unsafe_allow_html=True)
-
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
 from io import BytesIO
