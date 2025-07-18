@@ -50,13 +50,19 @@ st.markdown(f"""
     margin: 0;
     color: white;
     font-size: 2rem;
-    text-align: center;
     flex: 1;
+    text-align: center;
   }}
 
-  /* 3) Push all Streamlit content (sidebar & main) below the banner */
+  /* 3) Push ALL Streamlit content (sidebar & main) below the banner */
   body {{
     margin-top: var(--banner-h) !important;
+  }}
+
+  /* 4) Hide the built‑in sidebar toggle so it can’t be clicked */
+  button[aria-label="Collapse sidebar"],
+  button[aria-label="Expand sidebar"] {{
+    display: none !important;
   }}
 </style>
 
@@ -65,6 +71,7 @@ st.markdown(f"""
   <h1>Agentic Ideation Studio</h1>
 </div>
 """, unsafe_allow_html=True)
+
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
 from io import BytesIO
