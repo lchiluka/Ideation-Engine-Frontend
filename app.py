@@ -81,6 +81,16 @@ st.markdown(f"""
     width: var(--sidebar-w) !important;
     transform: none !important;
   }}
+            
+  /* ►  Push *everything* right by the sidebar width */
+  /* This handles both the overall app view container and the inner block container */
+  [data-testid="stAppViewContainer"] {{
+    margin-left: var(--sidebar-w) !important;
+    transition: margin-left .2s ease !important;
+  }}
+  .main .block-container {{
+    margin-left: var(--sidebar-w) !important;
+  }}
 
   /* 5) Hide the built‑in collapse/expand controls */
   [data-testid="stSidebarCollapseButton"],
