@@ -45,10 +45,10 @@ st.markdown(f"""
     z-index: 2000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }}
-  /* logo on the right */
+  /* logo on the left */
   .banner img {{
     position: absolute !important;
-    right: 24px !important;
+    left: 24px !important;
     height: 50px;
   }}
   /* title dead‑center */
@@ -106,38 +106,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown(f"""
-<style>
-  /* ───── Carlisle page & content background ───── */
-  body {{
-    background-color: #f0f4f8 !important;    /* light grey‑blue page background */
-  }}
-  .stAppViewContainer .main .block-container {{
-    background-color: #ffffff !important;     /* white cards */
-    border-radius: 8px;
-    padding: 1rem !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }}
-
-  /* ───── Carlisle‑themed sidebar ───── */
-  [data-testid="stSidebar"] {{
-    background-color: #003366 !important;     /* dark navy */
-    color: #ffffff !important;                /* all text white */
-  }}
-  /* ensure all labels / inputs / links inside sidebar remain white on dark */
-  [data-testid="stSidebar"] * {{
-    color: #ffffff !important;
-  }}
-  /* style any buttons or selects inside sidebar with an accent blue */
-  [data-testid="stSidebar"] button,
-  [data-testid="stSidebar"] .css-116l8so,  /* selectbox dropdown */
-  [data-testid="stSidebar"] .st-btn {{
-    background-color: #0055a5 !important;    /* Carlisle accent blue */
-    border-color:     #004080 !important;
-    color:            #ffffff !important;
-  }}
-</style>
-""", unsafe_allow_html=True)
 
 import streamlit as st
 import sys, inspect, json, time, logging, itertools
