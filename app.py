@@ -26,7 +26,7 @@ st.markdown(f"""
     --sidebar-w: 16rem;
   }}
 
-  /* 1) Hide Streamlit’s default header & toolbar */
+  /* 1) Hide default header & toolbar */
   [data-testid="stToolbar"],
   [data-testid="stHeader"] {{
     display: none !important;
@@ -88,30 +88,30 @@ st.markdown(f"""
     margin-left: var(--sidebar-w) !important;
   }}
 
-  /* 6) Hide Streamlit’s built‑in collapse controls */
+  /* 6) Hide built‑in sidebar toggles */
   [data-testid="stSidebarCollapseButton"],
   button[aria-label="Collapse sidebar"],
   button[aria-label="Expand sidebar"] {{
     display: none !important;
   }}
 
-  /* 7) (Optional) If you ever need the default status widget visible: */
-  /* [data-testid="stStatusWidget"] {{
+  /* 7) Re‑enable the default “busy” indicator */
+  [data-testid="stStatusWidget"] {{
     display: block !important;
     position: fixed !important;
     top: var(--banner-h) !important;
     left: 1rem !important;
     z-index: 2001 !important;
-    transform: scale(1.2);
-  }} */
+    transform: scale(1.2) !important;
+  }}
 
-  /* 8) Custom spinner CSS */
+  /* 8) Custom spinner element (will mirror the default) */
   #custom-loading {{
     display: none;
     position: fixed;
     top: calc(var(--banner-h) + 0.5rem);
     right: 1rem;
-    z-index: 2001;
+    z-index: 2002;
   }}
   #custom-loading .loader {{
     box-sizing: border-box;
@@ -129,17 +129,19 @@ st.markdown(f"""
   <h1>Agentic Ideation Studio</h1>
 </div>
 
-<!-- custom spinner element -->
+<!-- your mirror‑spinner -->
 <div id="custom-loading"><div class="loader"></div></div>
 
 <script>
-  // toggle our custom spinner in sync with Streamlit’s busy indicator
   const status = document.querySelector('[data-testid="stStatusWidget"]');
   const loader = document.getElementById('custom-loading');
   if (status && loader) {{
     function update() {{
-      loader.style.display = status.offsetParent === null ? 'none' : 'block';
+      // use computed style in case Streamlit toggles visibility/display
+      const disp = window.getComputedStyle(status).getPropertyValue('display');
+      loader.style.display = disp === 'none' ? 'none' : 'block';
     }}
+    // observe when Streamlit shows/hides its own spinner
     new MutationObserver(update).observe(status, {{
       attributes: true,
       attributeFilter: ['style','class']
