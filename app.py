@@ -2389,7 +2389,9 @@ if (
             # 📌 Commit to Blob Storage
             # ───────────────────────────────────────────────────────────────
             st.markdown("### 📌 Commit Proposals to Blob Storage")
-            # ─── Commit to Blob Storage ─────────────────────────────────────────────────
+            # ───────────────────────────────────────────────────────────────
+            # 📌 Commit to Blob Storage (streaming upload)
+            # ───────────────────────────────────────────────────────────────
             if st.button("📦 Commit Selected Proposals", key="commit_final"):
                 to_commit = final.copy()
                 if to_commit.empty:
@@ -2410,44 +2412,51 @@ if (
                             cid = json.loads(body)[0].get("id")
                             st.session_state.selected_df.at[idx, "id"] = cid
 
-                        # 2) Generate a one-concept DOCX
+                        # 2) Generate a one‑concept DOCX
                         buf = BytesIO()
                         build_docx_report([rec.to_dict()], buf)
                         buf.seek(0)
 
-                        # 3) Upload it to your API (which will push to Azure Blob)
+                        # 3) Stream it in 64KB chunks
+                        def gen():
+                            while True:
+                                chunk = buf.read(64 * 1024)
+                                if not chunk:
+                                    break
+                                yield chunk
+
+                        files = {
+                            "file": (
+                                f"{rec['title']}.docx",
+                                gen(),  # generator
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            )
+                        }
+
+                        # 4) Post with a 5s connect timeout, 120s read timeout
                         try:
                             resp = requests.post(
                                 f"{API_BASE_URL}/concepts/{cid}/proposal",
-                                files={
-                                    "file": (
-                                        f"{rec['title']}.docx",
-                                        buf,
-                                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                    )
-                                },
-                                timeout=30
+                                files=files,
+                                timeout=(5, 120),
                             )
                             resp.raise_for_status()
                         except requests.exceptions.RequestException as e:
                             st.error(f"❌ Upload failed for “{rec['title']}”: {e}")
-                            # if the server returned extra info, show it
-                            if resp is not None and resp.text:
-                                st.error(resp.text)
                             continue
 
-                        # 4) On success, record the returned proposal_url
+                        # 5) On success, grab the returned URL
                         data = resp.json()
                         url = data.get("proposal_url", "")
                         st.session_state.selected_df.at[idx, "proposal_url"] = url
                         successes += 1
 
-                    # 5) Summarize at the end
+                    # 6) Summary
                     if successes:
                         st.success(f"✅ Committed {successes} proposal(s) to storage.")
                     else:
                         st.warning("No proposals were successfully committed.")
-# ─── 3) Fixed footer ───────────────────────────────────────────────────
+            # ─── 3) Fixed footer ───────────────────────────────────────────────────
 st.markdown(
     """
     <style>
