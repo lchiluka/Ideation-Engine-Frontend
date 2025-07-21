@@ -2436,7 +2436,7 @@ if (
                                 f"{API_BASE_URL}/concepts/{cid}/proposal",
                                 data=m,
                                 headers={"Content-Type": m.content_type},
-                                timeout=(5, 120),
+                                timeout=(5, 300),
                             )
                             resp.raise_for_status()
                         except requests.exceptions.RequestException as e:
