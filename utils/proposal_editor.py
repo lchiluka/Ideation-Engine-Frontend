@@ -157,7 +157,7 @@ class ProposalEditor:
         # List of strings
         if isinstance(value, list) and all(isinstance(x, str) for x in value):
             joined = "\n".join(value)
-            new_txt = st.text_area(""Proposal text"", value=joined, key=widget_key, label_visibility="collapsed")
+            new_txt = st.text_area("Proposal text", value=joined, key=widget_key, label_visibility="collapsed")
             return [ln.strip() for ln in new_txt.splitlines() if ln.strip()]
 
         # Dict: editable JSON
