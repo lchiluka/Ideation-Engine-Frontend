@@ -2389,9 +2389,11 @@ if (
             # 📌 Commit to Blob Storage
             # ───────────────────────────────────────────────────────────────
             st.markdown("### 📌 Commit Proposals to Blob Storage")
-            # ───────────────────────────────────────────────────────────────
-            # 📌 Commit to Blob Storage (streaming upload)
-            # ───────────────────────────────────────────────────────────────
+            from io import BytesIO
+            import json, requests
+            from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+            # … inside your “Commit to Blob Storage” button handler …
             if st.button("📦 Commit Selected Proposals", key="commit_final"):
                 to_commit = final.copy()
                 if to_commit.empty:
@@ -2399,7 +2401,7 @@ if (
                 else:
                     successes = 0
                     for idx, rec in to_commit.iterrows():
-                        # 1) Ensure it’s saved in your backend API
+                        # 1️⃣  Ensure it’s saved in your backend
                         cid = rec.get("id")
                         if cid is None:
                             single = [rec.where(pd.notnull, None).to_dict()]
@@ -2412,32 +2414,28 @@ if (
                             cid = json.loads(body)[0].get("id")
                             st.session_state.selected_df.at[idx, "id"] = cid
 
-                        # 2) Generate a one‑concept DOCX
+                        # 2️⃣  Build the one‑concept DOCX in memory
                         buf = BytesIO()
                         build_docx_report([rec.to_dict()], buf)
                         buf.seek(0)
 
-                        # 3) Stream it in 64KB chunks
-                        def gen():
-                            while True:
-                                chunk = buf.read(64 * 1024)
-                                if not chunk:
-                                    break
-                                yield chunk
+                        # 3️⃣  Wrap it in a MultipartEncoder (which will stream)
+                        m = MultipartEncoder(
+                            fields={
+                                "file": (
+                                    f"{rec['title']}.docx",
+                                    buf,
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                )
+                            }
+                        )
 
-                        files = {
-                            "file": (
-                                f"{rec['title']}.docx",
-                                gen(),  # generator
-                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                            )
-                        }
-
-                        # 4) Post with a 5s connect timeout, 120s read timeout
+                        # 4️⃣  Post with a tuple timeout (connect, read)
                         try:
                             resp = requests.post(
                                 f"{API_BASE_URL}/concepts/{cid}/proposal",
-                                files=files,
+                                data=m,
+                                headers={"Content-Type": m.content_type},
                                 timeout=(5, 120),
                             )
                             resp.raise_for_status()
@@ -2445,13 +2443,13 @@ if (
                             st.error(f"❌ Upload failed for “{rec['title']}”: {e}")
                             continue
 
-                        # 5) On success, grab the returned URL
+                        # 5️⃣  On success, grab the returned URL
                         data = resp.json()
                         url = data.get("proposal_url", "")
                         st.session_state.selected_df.at[idx, "proposal_url"] = url
                         successes += 1
 
-                    # 6) Summary
+                    # 6️⃣  Summarize
                     if successes:
                         st.success(f"✅ Committed {successes} proposal(s) to storage.")
                     else:
