@@ -409,9 +409,8 @@ def render_concept_cards(df: pd.DataFrame, select_key_prefix: str, cards_per_row
                 """, unsafe_allow_html=True)
 
                 # Footer layout
-                col1, col2 = st.columns([1,1])
+                col1 = st.columns([1])[0]
                 checkbox_key = f"chk_{select_key_prefix}_{orig_idx}"
-                button_key   = f"exp_{select_key_prefix}_{orig_idx}"
 
                 # 1) figure out the *current* selection state
                 if select_key_prefix.startswith("existing"):
@@ -442,16 +441,6 @@ def render_concept_cards(df: pd.DataFrame, select_key_prefix: str, cards_per_row
                         st.rerun()
                     except AttributeError:
                         st.rerun()
-
-                # 3) expand button
-                if col2.button("Expand", key=button_key):
-                    st.session_state["expanded_prefix"] = select_key_prefix
-                    st.session_state["expanded_card"]  = orig_idx
-                    try:
-                        st.rerun()
-                    except AttributeError:
-                        st.rerun()
-
                 # close card
                 st.markdown("</div></div>", unsafe_allow_html=True)
 
@@ -1517,6 +1506,7 @@ with st.sidebar:
                       "score":             "Relevance"
                   })
             )
+            sim_df = sim_df.drop_duplicates(subset="Problem Statement")
             st.subheader("⚡ Similar Existing Problems")
             st.dataframe(sim_df, use_container_width=True)
 
@@ -2399,6 +2389,7 @@ if (
             # 📌 Commit to Blob Storage
             # ───────────────────────────────────────────────────────────────
             st.markdown("### 📌 Commit Proposals to Blob Storage")
+            # ─── Commit to Blob Storage ─────────────────────────────────────────────────
             if st.button("📦 Commit Selected Proposals", key="commit_final"):
                 to_commit = final.copy()
                 if to_commit.empty:
@@ -2406,11 +2397,13 @@ if (
                 else:
                     successes = 0
                     for idx, rec in to_commit.iterrows():
-                        # 1) Ensure it’s saved in your API
+                        # 1) Ensure it’s saved in your backend API
                         cid = rec.get("id")
                         if cid is None:
                             single = [rec.where(pd.notnull, None).to_dict()]
-                            ok, status, body = save_concepts(st.session_state.current_problem, single)
+                            ok, status, body = save_concepts(
+                                st.session_state.current_problem, single
+                            )
                             if not ok:
                                 st.error(f"❌ Failed to save “{rec['title']}” (status={status})")
                                 continue
@@ -2422,25 +2415,34 @@ if (
                         build_docx_report([rec.to_dict()], buf)
                         buf.seek(0)
 
-                        # 3) Upload it
-                        files = {
-                            "file": (
-                                f"{rec['title']}.docx",
-                                buf.getvalue(),
-                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        # 3) Upload it to your API (which will push to Azure Blob)
+                        try:
+                            resp = requests.post(
+                                f"{API_BASE_URL}/concepts/{cid}/proposal",
+                                files={
+                                    "file": (
+                                        f"{rec['title']}.docx",
+                                        buf,
+                                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                    )
+                                },
+                                timeout=30
                             )
-                        }
-                        resp = requests.post(
-                            f"{API_BASE_URL}/concepts/{cid}/proposal",
-                            files=files
-                        )
-                        if resp.ok:
-                            url = resp.json().get("proposal_url", "")
-                            st.session_state.selected_df.at[idx, "proposal_url"] = url
-                            successes += 1
-                        else:
-                            st.error(f"❌ Upload failed for “{rec['title']}”: {resp.status_code}")
+                            resp.raise_for_status()
+                        except requests.exceptions.RequestException as e:
+                            st.error(f"❌ Upload failed for “{rec['title']}”: {e}")
+                            # if the server returned extra info, show it
+                            if resp is not None and resp.text:
+                                st.error(resp.text)
+                            continue
 
+                        # 4) On success, record the returned proposal_url
+                        data = resp.json()
+                        url = data.get("proposal_url", "")
+                        st.session_state.selected_df.at[idx, "proposal_url"] = url
+                        successes += 1
+
+                    # 5) Summarize at the end
                     if successes:
                         st.success(f"✅ Committed {successes} proposal(s) to storage.")
                     else:
