@@ -212,7 +212,24 @@ st.session_state.setdefault("df_ppt", None)    # ← new
 API_BASE_URL =  "https://carlisle-ideation-engine-backend.azurewebsites.net"
 
 import requests
-
+def get_concepts_for(problem: str, top_k: int = 100) -> list[dict]:
+    """
+    Fetch all stored concepts for a given problem statement.
+    """
+    try:
+        resp = requests.get(
+            f"{API_BASE_URL}/concepts",
+            params={"problem_statement": problem, "top_k": top_k},
+            timeout=(5, 30)
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        # If your API wraps the list in a key, adjust accordingly:
+        # return data.get("concepts", []) if isinstance(data, dict) else data
+        return data
+    except requests.exceptions.RequestException as e:
+        logging.error(f"GET /concepts failed for '{problem}': {e}\n{resp.text if 'resp' in locals() else ''}")
+        return []
 def get_similar_concepts(problem: str, top_k: int = 50) -> list[dict]:
     """Return concepts whose stored problem statements semantically match."""
     try:
@@ -868,113 +885,153 @@ from difflib import SequenceMatcher
 
 async def _collect_solutions(
     problem: str,
-    constraints: str,
+    outcomes: str,
+    min_trl: int,
+    extra_constraints: str,
+    existing_concepts: list[dict] | None = None,
     stream: st.delta_generator.DeltaGenerator | None = None,
     ideation_agents: list[str] | None = None,
     workflow: str | None = None,
 ) -> list[dict]:
     """
-    Fan out to each agent, but first inject an “avoid these existing concepts” block
-    so nobody re-generates what’s already in your DB.
+    Fan out to each agent, passing:
+      - problem: core problem statement (user prompt)
+      - outcomes: desired outcomes that solutions must satisfy
+      - min_trl & extra_constraints: guardrails to focus ideas
+      - existing_concepts: list of already‑stored concepts to avoid (if None, reads from session)
+      - ideation_agents: optional override list of agents
+      - workflow: controls any special overrides
+    Returns a flat list of dict ideas from all agents.
     """
-    # ── Build normalize + existing titles ────────────────────────────────
+    import re, asyncio
+
+    # ── 1) Load existing concepts if not passed explicitly ───────────────
+    if existing_concepts is None:
+        existing_concepts = (
+            st.session_state.df_existing.to_dict("records")
+            if hasattr(st.session_state, "df_existing")
+            else []
+        )
+
+    # ── 2) Normalize titles & build avoid block ─────────────────────────
     def _normalize_title(t: str) -> str:
         return re.sub(r'[^a-z0-9]', '', t.lower())
 
-    existing = (
-        st.session_state.df_existing.to_dict("records")
-        if hasattr(st.session_state, "df_existing")
-        else []
-    )
-    existing_norms = [_normalize_title(c.get("title", "")) for c in existing]
+    existing_norms = [_normalize_title(c.get("title", "")) for c in existing_concepts]
+    avoid_block = ""
+    if existing_concepts:
+        avoid_block = (
+            "### Avoid these existing concepts:\n"
+            + "\n".join(f"- {c['title']}" for c in existing_concepts if c.get("title"))
+        )
 
-    # ── Per-agent call ───────────────────────────────────────────────────
+    # ── 3) Build guardrails & system prompt ───────────────────────────────
+    guardrails = [f"TRL ≥ {min_trl}"]
+    if extra_constraints:
+        guardrails.append(f"Constraints:\n{extra_constraints}")
+    guardrails = "\n".join(guardrails)
+
+    base_system = f"""
+You are an ideation agent. Solve the following *problem* and propose concepts that:
+1) Actually address the problem statement below.
+2) Achieve one or more of these desired outcomes:
+{outcomes or "- no explicit outcomes provided -"}
+3) Respect these guardrails (do not violate):
+{guardrails}
+
+{avoid_block}
+""".strip()
+
+    # ── 4) Per‐agent call with overrides, logging, unwrapping ─────────────
     async def _for_agent(agent_name: str) -> list[dict]:
+        # UI feedback + logging
         if stream:
             with stream:
                 _bubble(agent_name, "Generating concepts…")
         _log("assistant", "Generating concepts…", agent_name)
 
-        # build avoid-list so we don’t repeat existing titles
-        avoid_block = ""
-        if existing:
-            avoid_block = (
-                "### Avoid these existing concepts:\n"
-                + "\n".join(f"- {c['title']}" for c in existing if c.get("title"))
-            )
-
-        # baseline role suffix
-        suffix = constraints or ""
-        if avoid_block:
-            suffix += "\n\n" + avoid_block
-
-        # ── Integrated Solutions Ideation overrides ───────────────────
+        # Integrated Solutions Workflow overrides
         if workflow == "Integrated Solutions Ideation":
             if agent_name == "Product Ideation Agent":
-                # ask for 15–20 novel ideas
                 from asyncio import to_thread
                 raw = await to_thread(
                     call_product_ideation_with_search,
                     problem,
-                    existing,
+                    existing_concepts,
                     top_k=20
                 )
             elif agent_name == "Integrated Solutions Agent":
-                # ask for 3–5 integrated system designs
-                suffix += (
+                extra = (
                     "\n\nPlease propose 3–5 integrated system solutions "
                     "using only Carlisle products/components to solve the problem."
                 )
-                raw = await _run_agent_async(agent_name, problem, suffix)
+                rp = base_system + extra
+                raw = await _run_agent_async(agent_name, {"problem": problem}, rp)
             else:
-                # skip all others in this workflow
                 return []
         else:
-            # ── normal branch for all other workflows ───────────────────
+            # TRIZ uses schema helper
             if agent_name == "TRIZ Ideation Agent":
-                # use our schema‑safe helper
-                raw = await _run_triz_agent(problem, suffix)
+                raw = await call_llm_with_schema_async(
+                    endpoint=AGENT_MODEL_MAP[agent_name][0],
+                    deployment=AGENT_MODEL_MAP[agent_name][1],
+                    version=AGENT_MODEL_MAP[agent_name][2],
+                    role_prompt=base_system,
+                    user_prompt=problem,
+                    schema=AGENT_JSON_SCHEMAS[agent_name],
+                    api_key=AGENT_MODEL_MAP[agent_name][3],
+                )
             else:
-                raw = await _run_agent_async(agent_name, problem, suffix)
+                raw = await _run_agent_async(agent_name, {"problem": problem}, base_system)
 
-        # ── unwrap dict → list[dict] if needed ───────────────────────
+        # Unwrap dict → list[dict], including principles & contradictions
+        items: list[dict] = []
         if isinstance(raw, dict):
-            items: list[dict] = []
             if isinstance(raw.get("solutions"), list):
-                items = [s for s in raw["solutions"] if isinstance(s, dict)]
+                items.extend([s for s in raw["solutions"] if isinstance(s, dict)])
             for key in ("principles", "contradictions"):
                 if isinstance(raw.get(key), list):
                     items.extend([s for s in raw[key] if isinstance(s, dict)])
-            raw = items
+        elif isinstance(raw, list):
+            items = [s for s in raw if isinstance(s, dict)]
 
-        # ── filter & tag ─────────────────────────────────────────────
-        raw = [s for s in (raw or []) if isinstance(s, dict)]
-        for sol in raw:
+        # Deduplicate against existing by title norm
+        filtered = []
+        for sol in items:
+            title = sol.get("title", "")
+            if _normalize_title(title) in existing_norms:
+                continue
+            filtered.append(sol)
+        items = filtered
+
+        # Tag, feedback, logging
+        for sol in items:
             sol["agent"] = agent_name
 
         if stream:
             with stream:
-                _bubble(agent_name, f"Returned {len(raw)} ideas")
-        _log("assistant", f"{len(raw)} ideas", agent_name)
-        return raw
+                _bubble(agent_name, f"Returned {len(items)} ideas")
+        _log("assistant", f"{len(items)} ideas", agent_name)
 
+        return items
 
-    # ── Fire off all ideation agents in parallel ────────────────────────
-    agents = ideation_agents or IDEATION_AGENTS
-    # run all ideation agents in parallel, but catch per‑agent errors
+    # ── 5) Choose agents and run in parallel ─────────────────────────────
+    agents = ideation_agents if ideation_agents is not None else (
+        WORKFLOWS.get(workflow, IDEATION_AGENTS)
+    )
+
     chunks = await asyncio.gather(
         *[_for_agent(a) for a in agents],
         return_exceptions=True
     )
 
+    # ── 6) Flatten results & skip errors ────────────────────────────────
     ideas: list[dict] = []
     for agent_name, result in zip(agents, chunks):
         if isinstance(result, Exception):
-            # log & skip this broken agent
             logging.warning(f"Ideation agent {agent_name} failed: {result}")
-            continue
-        # otherwise extend with the list of dict solutions
-        ideas.extend(result)
+        else:
+            ideas.extend(result)
 
     return ideas
 
@@ -987,7 +1044,9 @@ import json
 
 async def ideate_review_refactor(
     problem: str,
-    constraints: str,
+    outcomes: str,
+    min_trl: int,
+    extra_constraints: str,
     existing_concepts: list[dict],
     stream: st.delta_generator.DeltaGenerator | None = None,
     workflow: str | None = None,
@@ -1602,21 +1661,21 @@ with st.sidebar:
             st.session_state.selected_workflow = choice
             if st.button("Start Ideation", key="start_ideation_sidebar"):
                 # build the combined prompt from desired outcomes, TRL, and extra constraints
-                tpl = st.session_state.prompt_tpl
-                parts = []
-                if tpl.get("outcomes"):
-                    parts.append(f"Desired Outcomes:\n{tpl['outcomes']}")
-                parts.append(f"TRL ≥ {tpl['min_trl']}")
-                if tpl.get("constraints"):
-                    parts.append(f"Constraints:\n{tpl['constraints']}")
-                full_prompt = "\n\n".join(parts)
+                # 1) Extract each template field
+                tpl       = st.session_state.prompt_tpl
+                problem   = st.session_state.current_problem
+                outcomes  = tpl.get("outcomes", "").strip()
+                min_trl   = tpl.get("min_trl", 1)
+                constraints = tpl.get("constraints", "").strip()
 
-                # RUN the full ideate→review→refine→enrich→TRL pipeline
+                # 2) Call your pipeline with them as separate args
                 raw, feedback_map, refined = run_async(
                     ideate_review_refactor(
-                        st.session_state.current_problem,
-                        full_prompt,
-                        st.session_state.df_existing.to_dict("records"),
+                        problem=problem,
+                        outcomes=outcomes,
+                        min_trl=min_trl,
+                        extra_constraints=constraints,
+                        existing_concepts=st.session_state.df_existing.to_dict("records"),
                         workflow=choice,
                     )
                 )
