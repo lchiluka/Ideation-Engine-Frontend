@@ -248,8 +248,7 @@ def get_similar_concepts(problem: str, top_k: int = 50) -> list[dict]:
     except Exception as e:
         logging.error(f"Error fetching similar concepts: {e}", exc_info=True)
         return []
-def safe_order(df: pd.DataFrame, desired: list[str]) -> list[str]:
-    return [c for c in desired if c in df.columns]
+
 
 logger = logging.getLogger(__name__)
 async def _run_agent_async(name: str, payload: Any, role_suffix: str = "") -> Dict[str, Any]:
@@ -1940,9 +1939,8 @@ if (
             # write back before rendering
             st.session_state.df_existing = df_existing
             if view_mode == "Table":
-                cols = safe_order(df_existing, ["__select__"] + DISPLAY_NO_ORIG)
-                edited = st.data_editor( 
-                    df_existing[cols],
+                edited = st.data_editor(
+                    df_existing[DISPLAY_NO_ORIG],
                     use_container_width=True,
                     column_config={
                         "__select__": st.column_config.CheckboxColumn("Select"),
@@ -1983,9 +1981,8 @@ if (
                 # write back before rendering
                 st.session_state.hist_concepts[problem] = hist_df.to_dict("records")
                 if view_mode == "Table":
-                    cols = safe_order(hist_df, ["__select__"] + DISPLAY_NO_ORIG)
                     edited = st.data_editor(
-                        hist_df[cols],
+                        hist_df[DISPLAY_NO_ORIG],
                         use_container_width=True,
                         column_config={"__select__": st.column_config.CheckboxColumn("Select")},
                         disabled=["agent", "title", "description"],
@@ -2138,9 +2135,8 @@ if (
             display_df = df_new[display_cols]
 
             if view_mode == "Table":
-                cols = safe_order(display_df, ["__select__"])
                 edited = st.data_editor(
-                    display_df[cols],
+                    display_df,
                     use_container_width=True,
                     column_config={
                         "__select__":       st.column_config.CheckboxColumn("Select"),
