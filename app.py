@@ -292,7 +292,7 @@ async def _run_triz_agent(problem: str, suffix: str):
     role_prompt = f"You are TRIZ Ideation Agent. {base_prompt}\n{suffix}"
 
     try:
-        return await call_llm_with_schema_sync(
+        return await call_llm_with_schema_async(
             # model & deployment come from AGENT_MODEL_MAP inside call_llm_with_schema_sync
             endpoint=AGENT_MODEL_MAP["TRIZ Ideation Agent"][0],
             deployment=AGENT_MODEL_MAP["TRIZ Ideation Agent"][1],
