@@ -180,7 +180,18 @@ import logging
 import streamlit as st
 from pathlib import Path
 import base64
+import asyncio
 
+def run_async(coro):
+    try:
+        # if there’s no running loop, this will raise
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # safe: no loop → use asyncio.run
+        return asyncio.run(coro)
+    else:
+        # loop already running → synchronously block until it finishes
+        return loop.run_until_complete(coro)
 # ───────────────────────────────────────────────────────────────────────
 # ─── Initialise session_state keys to sane defaults ────────────────────────
 st.session_state.setdefault("generate", False)
@@ -1570,7 +1581,7 @@ with st.sidebar:
                 full_prompt = "\n\n".join(parts)
 
                 # RUN the full ideate→review→refine→enrich→TRL pipeline
-                raw, feedback_map, refined = asyncio.run(
+                raw, feedback_map, refined = run_async(
                     ideate_review_refactor(
                         st.session_state.current_problem,
                         full_prompt,
