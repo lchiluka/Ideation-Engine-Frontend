@@ -197,39 +197,6 @@ st.session_state.setdefault("df_ppt", None)    # ← new
 # API config for FastAPI/Postgres back end
 # ─────────────────────────────────────────────────────────────────────────────
 API_BASE_URL =  "https://carlisle-ideation-engine-backend.azurewebsites.net"
-async def _run_triz_agent(problem: str, suffix: str):
-    """
-    Use strict schema enforcement for the TRIZ workflow,
-    but fall back to a free‐form call if schema‐validation fails.
-    """
-    try:
-        return await call_llm_with_schema_sync(
-            endpoint=AGENT_MODEL_MAP["TRIZ Ideation Agent"][0],
-            deployment=AGENT_MODEL_MAP["TRIZ Ideation Agent"][1],
-            version=AGENT_MODEL_MAP["TRIZ Ideation Agent"][2],
-            role_prompt=triz_system_prompt,
-            user_prompt=problem + suffix,
-            schema=AGENT_JSON_SCHEMAS["TRIZ Ideation Agent"],
-            api_key=AGENT_MODEL_MAP["TRIZ Ideation Agent"][3],
-        )
-    except RuntimeError as e:
-        if "schema-valid JSON" in str(e):
-            # fallback to the unconstrained agent.act() if strict schema fails
-            return await AGENTS["TRIZ Ideation Agent"].act(
-                json.dumps({"problem": problem}),  # or adapt payload shape
-                suffix
-            )
-        else:
-            raise
-def get_concepts_for(problem: str) -> list[dict]:
-    try:
-        r = requests.get(f"{API_BASE_URL}/concepts", params={"problem_statement": problem})
-        r.raise_for_status()
-        return r.json()
-    except Exception as e:
-        logging.error(f"Error fetching concepts: {e}")
-        return []
-
 
 import requests
 
@@ -317,6 +284,30 @@ def save_concepts(problem: str, concepts: list[dict]) -> tuple[bool,int,str]:
 # ---------------------------------------------------------------------------
 
 from utils.llm import call_llm_with_schema_sync
+async def _run_triz_agent(problem: str, suffix: str):
+    # grab the configured prompt from your Agent instance
+    base_prompt = AGENTS["TRIZ Ideation Agent"].prompt
+
+    # build the full role_prompt (just like your generic Agent.act does)
+    role_prompt = f"You are TRIZ Ideation Agent. {base_prompt}\n{suffix}"
+
+    try:
+        return await call_llm_with_schema_sync(
+            # model & deployment come from AGENT_MODEL_MAP inside call_llm_with_schema_sync
+            endpoint=AGENT_MODEL_MAP["TRIZ Ideation Agent"][0],
+            deployment=AGENT_MODEL_MAP["TRIZ Ideation Agent"][1],
+            version=AGENT_MODEL_MAP["TRIZ Ideation Agent"][2],
+            role_prompt=role_prompt,
+            user_prompt=problem + suffix,
+            schema=AGENT_JSON_SCHEMAS["TRIZ Ideation Agent"],
+            api_key=AGENT_MODEL_MAP["TRIZ Ideation Agent"][3],
+        )
+    except RuntimeError as e:
+        if "schema-valid JSON" in str(e):
+            # fall back to unconstrained .act() if strict schema fails
+            return await AGENTS["TRIZ Ideation Agent"].act(problem, suffix)
+        else:
+            raise
 
 # —————————————————————————————————————
 # LLM‐based Problem Matching Helpers
