@@ -248,7 +248,8 @@ def get_similar_concepts(problem: str, top_k: int = 50) -> list[dict]:
     except Exception as e:
         logging.error(f"Error fetching similar concepts: {e}", exc_info=True)
         return []
-
+def safe_order(df: pd.DataFrame, desired: list[str]) -> list[str]:
+    return [c for c in desired if c in df.columns]
 
 logger = logging.getLogger(__name__)
 async def _run_agent_async(name: str, payload: Any, role_suffix: str = "") -> Dict[str, Any]:
@@ -512,7 +513,7 @@ def render_concept_cards(df: pd.DataFrame, select_key_prefix: str, cards_per_row
                     else:
                         st.session_state.hist_concepts[problem][orig_idx]["__select__"] = checked
                     # immediately rerun so Table view picks it up
-                    st.rerun()
+                    st.rerun
                 # close card
                 st.markdown("</div></div>", unsafe_allow_html=True)
 
@@ -1939,8 +1940,8 @@ if (
             # write back before rendering
             st.session_state.df_existing = df_existing
             if view_mode == "Table":
-                cols = ["__select__"] + [c for c in DISPLAY_NO_ORIG if c != "__select__"]
-                edited = st.data_editor(
+                cols = safe_order(df_existing, ["__select__"] + DISPLAY_NO_ORIG)
+                edited = st.data_editor( 
                     df_existing[cols],
                     use_container_width=True,
                     column_config={
@@ -1982,7 +1983,7 @@ if (
                 # write back before rendering
                 st.session_state.hist_concepts[problem] = hist_df.to_dict("records")
                 if view_mode == "Table":
-                    cols = ["__select__"] + [c for c in DISPLAY_NO_ORIG if c != "__select__"]
+                    cols = safe_order(hist_df, ["__select__"] + DISPLAY_NO_ORIG)
                     edited = st.data_editor(
                         hist_df[cols],
                         use_container_width=True,
@@ -2137,7 +2138,7 @@ if (
             display_df = df_new[display_cols]
 
             if view_mode == "Table":
-                cols = ["__select__"] + [c for c in DISPLAY_NO_ORIG if c != "__select__"]
+                cols = safe_order(display_df, ["__select__"])
                 edited = st.data_editor(
                     display_df[cols],
                     use_container_width=True,
