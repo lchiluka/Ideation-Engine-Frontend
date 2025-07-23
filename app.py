@@ -512,10 +512,7 @@ def render_concept_cards(df: pd.DataFrame, select_key_prefix: str, cards_per_row
                     else:
                         st.session_state.hist_concepts[problem][orig_idx]["__select__"] = checked
                     # immediately rerun so Table view picks it up
-                    try:
-                        st.rerun()
-                    except AttributeError:
-                        st.rerun()
+                    st.rerun()
                 # close card
                 st.markdown("</div></div>", unsafe_allow_html=True)
 
@@ -1942,8 +1939,9 @@ if (
             # write back before rendering
             st.session_state.df_existing = df_existing
             if view_mode == "Table":
+                cols = ["__select__"] + [c for c in DISPLAY_NO_ORIG if c != "__select__"]
                 edited = st.data_editor(
-                    df_existing[DISPLAY_NO_ORIG],
+                    df_existing[cols],
                     use_container_width=True,
                     column_config={
                         "__select__": st.column_config.CheckboxColumn("Select"),
@@ -1984,8 +1982,9 @@ if (
                 # write back before rendering
                 st.session_state.hist_concepts[problem] = hist_df.to_dict("records")
                 if view_mode == "Table":
+                    cols = ["__select__"] + [c for c in DISPLAY_NO_ORIG if c != "__select__"]
                     edited = st.data_editor(
-                        hist_df[DISPLAY_NO_ORIG],
+                        hist_df[cols],
                         use_container_width=True,
                         column_config={"__select__": st.column_config.CheckboxColumn("Select")},
                         disabled=["agent", "title", "description"],
@@ -2138,8 +2137,9 @@ if (
             display_df = df_new[display_cols]
 
             if view_mode == "Table":
+                cols = ["__select__"] + [c for c in DISPLAY_NO_ORIG if c != "__select__"]
                 edited = st.data_editor(
-                    display_df,
+                    display_df[cols],
                     use_container_width=True,
                     column_config={
                         "__select__":       st.column_config.CheckboxColumn("Select"),
