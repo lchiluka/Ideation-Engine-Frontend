@@ -162,6 +162,8 @@ import os
 from config import WORKFLOWS, DEFAULT_COST_UNIT, DEFAULT_TARGET_COST, MIN_ACCEPTABLE_TRL
 from config import SECTION_DEPENDENCIES
 from agents import AGENTS
+from agents import AGENT_MODEL_MAP, AGENTS
+from schemas import AGENT_JSON_SCHEMAS
 from utils.pptx_export import build_pptx_from_df
 from utils.pptx_import import read_concept_cards
 from utils.docx_export import build_docx_report
@@ -195,7 +197,30 @@ st.session_state.setdefault("df_ppt", None)    # ← new
 # API config for FastAPI/Postgres back end
 # ─────────────────────────────────────────────────────────────────────────────
 API_BASE_URL =  "https://carlisle-ideation-engine-backend.azurewebsites.net"
-
+async def _run_triz_agent(problem: str, suffix: str):
+    """
+    Use strict schema enforcement for the TRIZ workflow,
+    but fall back to a free‐form call if schema‐validation fails.
+    """
+    try:
+        return await call_llm_with_schema_sync(
+            endpoint=AGENT_MODEL_MAP["TRIZ Ideation Agent"][0],
+            deployment=AGENT_MODEL_MAP["TRIZ Ideation Agent"][1],
+            version=AGENT_MODEL_MAP["TRIZ Ideation Agent"][2],
+            role_prompt=triz_system_prompt,
+            user_prompt=problem + suffix,
+            schema=AGENT_JSON_SCHEMAS["TRIZ Ideation Agent"],
+            api_key=AGENT_MODEL_MAP["TRIZ Ideation Agent"][3],
+        )
+    except RuntimeError as e:
+        if "schema-valid JSON" in str(e):
+            # fallback to the unconstrained agent.act() if strict schema fails
+            return await AGENTS["TRIZ Ideation Agent"].act(
+                json.dumps({"problem": problem}),  # or adapt payload shape
+                suffix
+            )
+        else:
+            raise
 def get_concepts_for(problem: str) -> list[dict]:
     try:
         r = requests.get(f"{API_BASE_URL}/concepts", params={"problem_statement": problem})
@@ -886,7 +911,11 @@ async def _collect_solutions(
                 return []
         else:
             # ── normal branch for all other workflows ───────────────────
-            raw = await _run_agent_async(agent_name, problem, suffix)
+            if agent_name == "TRIZ Ideation Agent":
+                # use our schema‑safe helper
+                raw = await _run_triz_agent(problem, suffix)
+            else:
+                raw = await _run_agent_async(agent_name, problem, suffix)
 
         # ── unwrap dict → list[dict] if needed ───────────────────────
         if isinstance(raw, dict):
@@ -1660,7 +1689,7 @@ with st.sidebar:
             type=["pptx", "json"],
             key="enrich_uploader"
         )
-
+        final = read_concept_cards(upload) if upload else None
         # If PPTX is uploaded, ask for its associated problem statement
         ppt_problem = ""
         if upload and upload.name.lower().endswith(".pptx"):
@@ -1718,7 +1747,9 @@ with st.sidebar:
                     merged["title"] = title
                     merged["problem_statement"] = problem_stmt
                     enriched_cards.append(merged)
-
+                    for img_file in card.get("media", []):
+                        st.image(img_file, caption=img_file.name)
+                        
             # 2) Uploaded JSON: single concept
             elif upload is not None and upload.name.lower().endswith(".json"):
                 try:

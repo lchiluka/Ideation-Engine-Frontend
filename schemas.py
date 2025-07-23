@@ -144,7 +144,7 @@ AGENT_JSON_SCHEMAS: dict[str, dict] = {
                     "type": "object",
                     "properties": {
                         "title":                   {"type": "string"},
-                        "description":             {"type": "array",  "items": {"type": "string"}},
+                        "description":             {"oneOf": [{ "type": "string"     },{ "type": "array", "items": { "type": "string" } }]},
                         "triz_principles_applied": {"type": "array",  "items": {"type": "integer"}},
                         "advantages":              {"type": "array",  "items": {"type": "string"}},
                         "challenges":              {"type": "array",  "items": {"type": "string"}},
