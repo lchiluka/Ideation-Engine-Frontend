@@ -1072,7 +1072,7 @@ async def ideate_review_refactor(
     ideation_agents = [a for a in wf_agents if a in IDEATION_AGENTS]
     review_agents = [a for a in wf_agents if a in REVIEW_AGENTS]
 
-    raw = await _collect_solutions(problem, constraints, stream, ideation_agents, workflow)
+    raw = await _collect_solutions( problem=problem, outcomes=outcomes, min_trl=min_trl,       extra_constraints=extra_constraints,existing_concepts=existing_concepts,stream=stream,ideation_agents=ideation_agents,workflow=workflow,  )
     print(f"[DEBUG] after _collect_solutions, raw has {len(raw)} items: {raw!r}")
 
     # ── 2. If a dict was returned with a 'solutions' key, unwrap it ───
@@ -1597,23 +1597,26 @@ with st.sidebar:
             help="Any additional requirements or boundaries for the concepts."
         )
         if st.button("Submit", key="submit_main") and prob.strip():
-            # STEP 1: Fetch semantically similar concepts
-            sim_results = get_similar_concepts(prob)
-            rows: list[dict] = []
-            for item in sim_results:
+            # 1) exact matches
+            exact = pd.DataFrame(get_concepts_for(prob))
+            # 2) semantic matches
+            sim_rows = []
+            for item in get_similar_concepts(prob):
                 sim = item.get("similarity", 0)
                 for c in item.get("concepts", []):
                     c["similarity"] = sim
-                    rows.append(c)
-            df = pd.DataFrame(rows)
-            if not df.empty:
-                df = df.sort_values("similarity", ascending=False)
+                    sim_rows.append(c)
+            semantic = pd.DataFrame(sim_rows)
+
+            # 3) merge
+            df = pd.concat([exact, semantic], ignore_index=True).drop_duplicates(subset="title")
+            df = _ensure_helper_cols(df).sort_values("similarity", ascending=False)
             st.session_state.df_existing = df
             st.session_state.current_problem = prob
             st.session_state.df_to_process = None
         # 1) Kick off the LLM match
         if st.button("🔍 Find Similar Problems (Search Historical)") and prob.strip():
-            st.session_state.similar = get_similar_problems_via_llm(prob, top_k=5)
+            st.session_state.similar = get_similar_problems_via_llm(prob, top_k=7)
             st.session_state.pop("hist_problems", None)
             st.session_state.pop("hist_concepts", None)
 
@@ -1944,8 +1947,12 @@ if (
                     use_container_width=True,
                     column_config={
                         "__select__": st.column_config.CheckboxColumn("Select"),
-                        "trl":       st.column_config.ProgressColumn("TRL", min_value=1, max_value=9),
-                        "proposal_url": st.column_config.LinkColumn("Proposal"),
+                        "trl":               st.column_config.ProgressColumn(
+                                                "TRL", min_value=1, max_value=9, format="%d"
+                                            ),
+                        "validated_trl":     st.column_config.ProgressColumn(
+                                                "Validated TRL", min_value=1, max_value=9, format="%d"
+                                            ),
                     },
                     disabled=["agent", "title", "description"],
                     key="table_existing_editor"
@@ -2327,8 +2334,12 @@ if (
                 sel[DISPLAY_WITH_ORIG],
                 column_config={
                     "__select__":     st.column_config.CheckboxColumn("Keep"),
-                    "trl":            st.column_config.ProgressColumn("TRL", min_value=1, max_value=9),
-                    "validated_trl":  st.column_config.ProgressColumn("Validated TRL", min_value=1, max_value=9),
+                    "trl":               st.column_config.ProgressColumn(
+                                            "TRL", min_value=1, max_value=9, format="%d"
+                                        ),
+                    "validated_trl":     st.column_config.ProgressColumn(
+                                            "Validated TRL", min_value=1, max_value=9, format="%d"
+                                        ),
                 },
                 use_container_width=True,
                 key="final_editor",
