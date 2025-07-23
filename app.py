@@ -181,17 +181,12 @@ import streamlit as st
 from pathlib import Path
 import base64
 import asyncio
-
+import nest_asyncio
+nest_asyncio.apply()
 def run_async(coro):
-    try:
-        # if there’s no running loop, this will raise
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        # safe: no loop → use asyncio.run
-        return asyncio.run(coro)
-    else:
-        # loop already running → synchronously block until it finishes
-        return loop.run_until_complete(coro)
+    """Run an async coroutine in Streamlit, even if an event loop is already running."""
+    return asyncio.run(coro)
+
 # ───────────────────────────────────────────────────────────────────────
 # ─── Initialise session_state keys to sane defaults ────────────────────────
 st.session_state.setdefault("generate", False)
