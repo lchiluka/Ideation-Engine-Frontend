@@ -186,6 +186,13 @@ nest_asyncio.apply()
 def run_async(coro):
     """Run an async coroutine in Streamlit, even if an event loop is already running."""
     return asyncio.run(coro)
+# near the top of your file, after imports
+import json
+import logging
+from typing import Any, Dict
+from agents import AGENTS
+
+
 
 # ───────────────────────────────────────────────────────────────────────
 # ─── Initialise session_state keys to sane defaults ────────────────────────
@@ -227,6 +234,35 @@ def get_similar_concepts(problem: str, top_k: int = 50) -> list[dict]:
 
 
 logger = logging.getLogger(__name__)
+async def _run_agent_async(name: str, payload: Any, role_suffix: str = "") -> Dict[str, Any]:
+    """
+    Try schema‑safe LLM call first. If it raises a 
+    RuntimeError about JSON schema, fall back to .act().
+    """
+    raw_payload = json.dumps(payload, ensure_ascii=False)
+    try:
+        # your existing schema‑enforced call
+        return await AGENTS[name].act(raw_payload, role_suffix)
+    except RuntimeError as e:
+        msg = str(e)
+        if "failed to produce schema-valid JSON" in msg:
+            logging.warning(f"{name}: schema validation failed, falling back. Error: {msg}")
+            # fallback to unconstrained call
+            return await AGENTS[name].act(raw_payload, role_suffix)
+        # re‑raise any other errors
+        raise
+
+def _run_agent(name: str, payload: Any, role_suffix: str = "") -> Dict[str, Any]:
+    """Sync version of the above, if you use it anywhere."""
+    raw_payload = json.dumps(payload, ensure_ascii=False)
+    try:
+        return AGENTS[name].act(raw_payload, role_suffix)
+    except RuntimeError as e:
+        msg = str(e)
+        if "failed to produce schema-valid JSON" in msg:
+            logging.warning(f"{name}: schema validation failed, falling back. Error: {msg}")
+            return AGENTS[name].act(raw_payload, role_suffix)
+        raise
 
 def save_concepts(problem: str, concepts: list[dict]) -> tuple[bool,int,str]:
     workflow = st.session_state.selected_workflow
@@ -826,19 +862,6 @@ from config import IDEATION_AGENTS, REVIEW_AGENTS  # NEW import
 import asyncio
 
 
-def _run_agent(name: str, payload: Any, role_suffix: str = "") -> dict:
-    """
-    Thin wrapper around AGENTS[name].act():
-        • JSON-serialises *payload*
-        • adds optional extra prompt *role_suffix*
-    Returns the schema-validated JSON from the agent.
-    """
-    return AGENTS[name].act(json.dumps(payload, ensure_ascii=False), role_suffix)
-
-
-async def _run_agent_async(name: str, payload: Any, role_suffix: str = "") -> dict:
-    return await AGENTS[name].act(json.dumps(payload, ensure_ascii=False), role_suffix)
-
 
 import re
 from difflib import SequenceMatcher
@@ -938,9 +961,22 @@ async def _collect_solutions(
 
     # ── Fire off all ideation agents in parallel ────────────────────────
     agents = ideation_agents or IDEATION_AGENTS
-    chunks = await asyncio.gather(*[_for_agent(a) for a in agents])
-    # flatten
-    return [idea for chunk in chunks for idea in chunk]
+    # run all ideation agents in parallel, but catch per‑agent errors
+    chunks = await asyncio.gather(
+        *[_for_agent(a) for a in agents],
+        return_exceptions=True
+    )
+
+    ideas: list[dict] = []
+    for agent_name, result in zip(agents, chunks):
+        if isinstance(result, Exception):
+            # log & skip this broken agent
+            logging.warning(f"Ideation agent {agent_name} failed: {result}")
+            continue
+        # otherwise extend with the list of dict solutions
+        ideas.extend(result)
+
+    return ideas
 
 
 import re
